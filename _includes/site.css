@@ -17,7 +17,6 @@ p.first {
   margin-bottom:0.5em;
   font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
   font-weight: 300;
-  margin-left: 50px;
 }
 
 p.second{
@@ -254,7 +253,7 @@ Include: Header
 */
 header h1 {
   text-transform: none;
-  font-size: 60px;
+  font-size: 70px;
   margin: 20px 0 10px 0;
   vertical-align: bottom;
   font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
