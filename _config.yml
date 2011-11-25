@@ -1,10 +1,1 @@
-permalink:    /:year/:month/:day/:title
-analytics_id: UA-19951111
-title:        API Axle
-description:  API Axle - Drive your API
-url:          http://127.0.0.0:4000
-author:       Phil Jackson
-email:        phil@shellarchive.co.uk
-keywords:     apiaxle, API, APIs, API Management, API strategy, API Management Solution, developer portals, documentation, deveoper relations, mobile apps, mashery, apigee alternateive, sonoa alternative, 3scale alternative, mashery alternative
-comments:     false
-ignore:       _blog, _posts/folio
+safe: true
