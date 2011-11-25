@@ -1,0 +1,13 @@
+<header>
+  <div class="container">
+    <div id="name-title" class="span-5">
+      <h1>API Axle</h1>
+    </div>
+
+    <nav id="main" class="span-7 last">
+        <ul>
+          <li>{% if page.title != 'About' %}<a href="/about.html">{% else %}<span class="selected">{% endif %}About{% if page.title != 'About' %}</a>{% else %}</span>{% endif %}</li>
+        </ul>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,398 @@
+.ampersand {
+  font-family: Baskerville, Palatino, "Book Antiqua", serif;
+  font-style: italic;
+  vertical-align: sub;
+}
+
+html,body {
+  background-color:#fff;
+}
+
+html {
+  background-color: #ddd;
+}
+
+
+p.first {
+  text-align: left;
+  font-size:2.3em;
+  line-height:1.3em;
+  margin-top:0.5em;
+  margin-bottom:0.5em;
+  font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
+  font-weight: 300;
+  margin-left: 40px;
+}
+
+p.second{
+  margin-top:0; 
+}
+
+.ampersand {
+  font-family: Baskerville, Palatino, "Book Antiqua", serif;
+  font-style: italic;
+  vertical-align:sub;
+}
+
+.first .ampersand {
+  vertical-align: baseline;
+}
+
+h2 .ampersand {
+  font-size:1.6em;
+  
+}
+
+ul, form ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+body,h1,h2,h3,h4,h5 {
+  font-size: 90%;
+  font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
+}
+
+body {
+  font-weight: 300;  
+  color: #666;;
+  line-height:1.5em;
+  font-family:"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
+}
+
+h1,h2,h3,h4,h5 {
+  text-transform: uppercase;
+  font-weight: 500;
+  margin: 1em 0 0 0;
+  color: #333;;
+}
+
+nav li {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+p {
+  margin: 1em 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:link,a:visited,a:active {
+  color: #d40055;;
+}
+
+a:hover {
+  border-bottom: 1px dotted #d40055;;
+}
+
+pre, code {
+  .rounded-corners(5px);
+  background-color:#ddd;  
+}
+
+pre {
+  margin: 5px 0;
+  padding:10px;
+  overflow: auto;
+}
+
+code {
+  font-size: 0.8em;
+  text-shadow: 0 1px 0 rgba(255,255,255,1);
+  padding:2px;
+}
+
+blockquote {
+  color: #666;;
+  font-size: 0.8em;
+  border-left: 1px solid #666;;
+  padding-left: 10px;
+}
+
+#content {
+  margin-bottom:40px;
+}
+
+/*
+Layout: Post
+*/
+.post-title {
+  text-transform: none;
+}
+
+h2.post-title {
+  font-size: 1.5em;
+  margin: 1em 0 0 0;
+  font-weight: 300;
+}
+
+h3.post-title {
+  font-size: 1.2em;
+  margin: 1em 0 0.5em 0;
+  font-weight: 300;
+}
+
+.post.content {
+  border-top: 1px dotted #ccc;;
+}
+
+.post.content.excerpt {
+  border-top: none;
+  border-bottom: none;
+}
+
+.post.content.excerpt img {
+  display:none;
+}
+
+.post.content.excerpt p {
+  margin-bottom: 0;
+  margin-top: 0.5em;
+}
+
+.post.byline {
+  color: #666;;
+  margin: 0.5em 0;
+  font-size: 0.9em;
+}
+
+.post.excerpt.read-more p,p a#comment-toggle {
+  font-size: 0.9em;
+  text-align: left;
+  margin: 0;
+}
+
+article.post.excerpt {
+  margin: 1em 0;
+}
+
+.post.content ul {
+  list-style-type: disc;
+  margin: 0 1.5em 1.5em 0;
+  padding-left: 1.5em;
+}
+
+img.bordered {
+  .rounded-image-border;
+}
+
+img.bordered:hover {
+  .rounded-image-border-hover;
+}
+
+img.post-float-left {
+  float: left;
+  margin: 10px 10px 10px 0;
+}
+img.post-float-right {
+  float: right;
+  margin: 10px 0 10px 10px;
+}
+
+/*
+Page: Index 
+*/
+/* Image is offset so tweak the div height */
+#dave-img {
+  height:150px;
+}
+
+img#dave {
+  position:relative;
+  top:10px;
+}
+
+#working-on, #latest-notes {
+  margin-top:10px;
+  margin-bottom:10px;
+}
+
+/*
+Include: Footer
+*/
+footer {
+  margin: 0;
+  padding: 0 0 5px 0;
+  font-size: 12px;
+  border-top: 1px solid #999;; 
+  background-color: #ddd;
+}
+
+ul#contact-icons li {
+  margin:8px 0;
+  display: block;
+}
+  
+ul#contact-icons img {
+ position:relative;
+ margin:0 10px 0 0px;
+ top:7px;
+}
+
+ul#contact-icons a.image-wrapper {
+  border-bottom:none;
+}
+
+footer h2 {
+  font-size:100%;
+  font-family: museo-slab, serif;;
+  font-weight: 500;
+}
+
+#copyright {
+  color: #666;;
+  font-size: 80%;
+  width: 100%;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  text-align: left;
+  border-top: 1px solid #999;;
+}
+
+footer ul {
+  margin-bottom: 1em;
+}
+
+footer li {
+  margin-bottom: 0.5em;
+}
+
+/*
+Include: Header
+*/
+header h1 {
+  text-transform: none;
+  font-size: 60px;
+  margin: 20px 0 10px 0;
+  vertical-align: bottom;
+  font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
+  font-weight: 500;
+  color:#333;;
+  text-indent:-5px;
+}
+
+nav#main {
+  position: relative;
+}
+
+nav#main li {
+  float: right;
+  margin-left: 5px;
+  padding-top:20px;
+}
+
+nav#main a,nav#main .selected {
+  font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
+  padding: 0 10px;
+  display: block;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 14px;  
+  font-weight: 500;
+  vertical-align: bottom;
+}   
+
+nav#main a:link,nav#main a:visited,nav#main a:active {
+  color: #999;;
+}
+
+nav#main a:hover {
+  color: #d40055;;
+  border-bottom: none;
+}
+
+nav#main .selected {
+  color: #333;;
+}
+
+/*
+Page: Notebook
+*/
+a.image-wrapper {
+  border-bottom:none;
+}
+
+#post-archive-category-list { 
+  .rounded-corners(10px);
+  border: 1px solid #666;;
+  padding:7px 6px;
+  margin: 18px 0 20px 0;
+}
+
+#post-archive-category-list-desc p {
+ margin-top:0; 
+}
+
+#post-archive-category-list li a {
+  margin: 1em 0;
+  padding: 4px 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8em;
+  color:#333;;
+  font-weight: 300;
+}
+
+#post-archive-category-list a.selected {
+  font-weight: 300;
+  color: #fff;
+  background-color: #333;;
+  .rounded-corners(5px);
+}
+
+#post-archive-category-list a:hover {
+  color: #d40055;;
+  border: none;
+}
+
+span.archive-listing-date {
+  float: right;
+  font-size: 0.9em;
+}
+
+nav#post-archive-list {
+  margin: 1em 0;
+}
+
+nav#post-archive-list a.title {
+  font-size: 1em;
+}
+
+/*
+Page: About
+*/
+#disclaimer{
+  .rounded-corners(10px);
+  border: 1px solid #666;;
+  padding:10px;
+  margin:0 0 20px 0;
+}
+
+input[type="submit"] {
+  padding:7px 20px;
+  font-weight: 300;
+  color: #fff;
+  background-color: #333;;
+  .rounded-corners(5px);
+  border:none;
+  font-weight:500;
+  float:right;
+  letter-spacing: 1px;
+  border:1px solid #ddd;
+}
+
+input[type="submit"]:hover, input[type="submit"]:focus {  
+  text-shadow: 0px -1px 2px #333, 0 0 3px #fff;
+  border:1px solid #d40055;;
+  outline:none;
+} 
+
+input[type="submit"],  textarea, input[type="text"], label {
+  .basesans;
+  font-size:12px;
+}
