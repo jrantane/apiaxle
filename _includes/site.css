@@ -1,9 +1,3 @@
-.ampersand {
-  font-family: Baskerville, Palatino, "Book Antiqua", serif;
-  font-style: italic;
-  vertical-align: sub;
-}
-
 html,body {
   background-color:#fff;
 }
@@ -21,7 +15,7 @@ p.first {
   margin-bottom:0.5em;
   font-family: museo-sans,"Helvetica Neue",Helvetica,Geneva,Verdana,Arial,sans-serif;
   font-weight: 300;
-  margin-left: 40px;
+  margin-left: 50px;
 }
 
 p.second{
@@ -91,7 +85,6 @@ a:hover {
 }
 
 pre, code {
-  .rounded-corners(5px);
   background-color:#ddd;  
 }
 
@@ -175,14 +168,6 @@ article.post.excerpt {
   list-style-type: disc;
   margin: 0 1.5em 1.5em 0;
   padding-left: 1.5em;
-}
-
-img.bordered {
-  .rounded-image-border;
-}
-
-img.bordered:hover {
-  .rounded-image-border-hover;
 }
 
 img.post-float-left {
@@ -318,7 +303,6 @@ a.image-wrapper {
 }
 
 #post-archive-category-list { 
-  .rounded-corners(10px);
   border: 1px solid #666;;
   padding:7px 6px;
   margin: 18px 0 20px 0;
@@ -342,7 +326,6 @@ a.image-wrapper {
   font-weight: 300;
   color: #fff;
   background-color: #333;;
-  .rounded-corners(5px);
 }
 
 #post-archive-category-list a:hover {
@@ -367,7 +350,6 @@ nav#post-archive-list a.title {
 Page: About
 */
 #disclaimer{
-  .rounded-corners(10px);
   border: 1px solid #666;;
   padding:10px;
   margin:0 0 20px 0;
@@ -378,7 +360,6 @@ input[type="submit"] {
   font-weight: 300;
   color: #fff;
   background-color: #333;;
-  .rounded-corners(5px);
   border:none;
   font-weight:500;
   float:right;
