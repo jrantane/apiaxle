@@ -2,3 +2,4 @@ title: API Axle
 safe: true
 twitter: "https://twitter.com/#!/apiaxle"
 email: "phil@shellarchive.co.uk"
+permalink: /docs/:title
