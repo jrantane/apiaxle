@@ -262,6 +262,10 @@ header h1 {
   text-indent:-5px;
 }
 
+header {
+  border-bottom: 1px dotted #ddd;
+}
+
 nav#main {
   position: relative;
 }
