@@ -6,6 +6,23 @@ html {
   background-color: #ddd;
 }
 
+.try-it-now-button {
+  background-image:url(http://github.com/philjackson/apiaxle/raw/gh-pages/img/btn-tryitnow.png);
+  display:block;
+  width:282px;
+  height:51px;
+  text-indent:-999em;
+  margin:40px auto;
+}
+
+.try-it-now-button:hover {
+  background-position:center center;
+}
+
+.try-it-now-button:active {
+  background-position:center bottom;
+}
+
 #features {
   padding-top: 20px;
 }
@@ -85,10 +102,6 @@ a {
 
 a:link,a:visited,a:active {
   color: #d40055;
-}
-
-a:hover {
-  border-bottom: 1px dotted #d40055;
 }
 
 pre, code {
