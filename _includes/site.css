@@ -10,7 +10,7 @@ html {
   background-image:url(http://github.com/philjackson/apiaxle/raw/gh-pages/img/btn-tryitnow.png);
   display:block;
   width:282px;
-  height:51px;
+  height:50px;
   text-indent:-999em;
   margin:40px auto;
 }
@@ -25,6 +25,7 @@ html {
 
 #features {
   padding-top: 20px;
+  margin: 0 auto;
 }
 
 #features a {
