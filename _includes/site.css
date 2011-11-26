@@ -6,6 +6,10 @@ html {
   background-color: #ddd;
 }
 
+#features {
+  padding-top: 20px;
+}
+
 p.first {
   text-align: left;
   font-size:2.3em;
