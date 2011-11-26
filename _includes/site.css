@@ -84,11 +84,11 @@ a {
 }
 
 a:link,a:visited,a:active {
-  color: #d40055;;
+  color: #d40055;
 }
 
 a:hover {
-  border-bottom: 1px dotted #d40055;;
+  border-bottom: 1px dotted #d40055;
 }
 
 pre, code {
