@@ -229,6 +229,14 @@ footer {
   background-color: #ddd;
 }
 
+footer a {
+  color: #333;
+}
+
+footer a:visited {
+  color: #333;
+}
+
 ul#contact-icons li {
   margin:8px 0;
   display: block;
