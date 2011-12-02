@@ -7,10 +7,10 @@ title: "Documentation"
 
 ## System
 
-* [Architecture](/docs/architecture)
+* [Architecture](/apiaxle/docs/architecture)
 
 ## Proxy
 
-* [Provisioning via the command line](/docs/provisioning-via-the-command-line)
+* [Provisioning via the command line](/apiaxle/docs/provisioning-via-the-command-line)
 
 ## API
