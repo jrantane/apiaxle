@@ -5,12 +5,11 @@ title: "Documentation"
 
 # {{page.title}}
 
-## System
-
-* [Architecture](/apiaxle/docs/architecture)
-
 ## Proxy
 
-* [Provisioning via the command line](/apiaxle/docs/provisioning-via-the-command-line)
+* [Getting started](/apiaxle/docs/try-it-now/) - Start using Apiaxle right away.
+* [Provisioning via the command line](/apiaxle/docs/provisioning-via-the-command-line) - Use scripts to create APIs and API keys.
 
-## API
+## System
+
+* [Architecture](/apiaxle/docs/architecture) - A high-level view of the system.
