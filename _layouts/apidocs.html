@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% include meta.html %}
+
+    <style type="text/css">
+      {% include blueprint/screen.css %}
+      {% include site.css %}
+      {% include apidocs.css %}
+    </style>
+
+    <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="http://use.typekit.com/xsz7aem.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+    <link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,bold' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold' rel='stylesheet' type='text/css'>
+
+    <!--[if lt IE 8]>
+      <style type="text/css">
+        {% include blueprint/ie.css %}
+      </style>
+    <![endif]-->
+  </head>
+  <body>
+    <div id="page">
+
+    {% include header.html %}
+
+    <div id="content" >
+      <section class="container">
+        {{ content }}
+      </section>
+    </div>
+
+    {% include footer.html %}
+  </div>
+  </body>
+</html>
