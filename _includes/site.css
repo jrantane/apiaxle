@@ -213,6 +213,9 @@ Page: Index
   height:150px;
 }
 
+#fb-like-container {
+}
+
 img#dave {
   position:relative;
   top:10px;
@@ -412,6 +415,5 @@ input[type="submit"]:hover, input[type="submit"]:focus {
 } 
 
 input[type="submit"],  textarea, input[type="text"], label {
-  .basesans;
   font-size:12px;
 }
