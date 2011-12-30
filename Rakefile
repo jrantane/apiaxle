@@ -5,7 +5,7 @@ task :generate do
 end
 
 task :server do
-  sh "jekyll --server --auto --base-url=/apiaxle/"
+  sh "jekyll --server --auto "
 end
 
 task :deploy => [:generate] do
