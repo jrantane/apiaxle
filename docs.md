@@ -7,13 +7,13 @@ title: "Documentation"
 
 ## Proxy
 
-* [Getting started](/apiaxle/docs/try-it-now/) - Start using Apiaxle right away.
-* [Provisioning via the command line](/apiaxle/docs/provisioning-via-the-command-line) - Use scripts to create APIs and API keys.
+* [Getting started](http://apiaxle.com/docs/try-it-now/) - Start using Apiaxle right away.
+* [Provisioning via the command line](http://apiaxle.com/docs/provisioning-via-the-command-line) - Use scripts to create APIs and API keys.
 
 ## System
 
-* [Architecture](/apiaxle/docs/architecture) - A high-level view of the system.
+* [Architecture](http://apiaxle.com/docs/architecture) - A high-level view of the system.
 
 ## API
 
-* [Documentation](/apiaxle/api.html) - Read the API definition.
+* [Documentation](http://apiaxle.com/api.html) - Read the API definition.
