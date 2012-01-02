@@ -116,3 +116,14 @@ Supported query params:
 * If `resolve` is passed then results will be an object with the
   key name as the key and the details as the value.
 
+# /v1/stats/:key/all
+## GET
+
+Get the statistics for key `:key`.
+
+### Returns:
+
+* Object where the keys represent the HTTP status code of the
+  endpoint or the error returned by apiaxle (QpsExceededError, for
+  example). Each object contains date to hit count pairs.
+
