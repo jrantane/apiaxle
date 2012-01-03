@@ -7,7 +7,7 @@ title: "About & Support"
 
 Apiaxle is a product which might sit in front of your API and provide
 services such as rate limiting and key authentication. There's a
-[basic architecture description](/apiaxle/docs/architecture/) in the
+[basic architecture description](http://apiaxle.com/docs/architecture) in the
 docs section.
 
 # Why is it?
