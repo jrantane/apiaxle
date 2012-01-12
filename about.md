@@ -27,3 +27,8 @@ gradually the system will all the better for it.
 
 [Get in touch](mailto:phil@shellarchive.co.uk) and we can provide new
 features, integrate the API into your platform and provide support.
+
+# Licencing
+
+[Get in touch](mailto:phil@shellarchive.co.uk) if you would like to
+purchase a non-GPL licence for Apiaxle.
