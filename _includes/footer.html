@@ -4,15 +4,17 @@
       {% include connect_follow.html%}
     </div>
     <div class="span-5 last">
-      <h2>social</h2>
-      <div id="fb-like-container">
-        <div class="fb-like" data-href="http://apiaxle.com" data-send="false" data-width="450" data-show-faces="true"></div>
-      </div>
+      <h2>Latest documentation</h2>
+      <ul>
+      {% for post in site.posts %}
+        <li>{{ post.date | date:"%Y-%m-%d" }} - <a href="{{ post.url }}">{{ post.title }}</a>
+      {% endfor %}
+      </ul>
     </div>
 
     <div id="copyright" class="span-12 last">
       <p>
-        Copyright &copy; Phil Jackson 2010 | Site template thanks
+        Copyright &copy; Phil Jackson 2011-2012 | Site template thanks
         to <a href="https://github.com/dlimiter/dlimiter.net">Dave
         Lim</a>.
       </p>
