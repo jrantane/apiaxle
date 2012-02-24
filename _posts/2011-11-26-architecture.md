@@ -16,4 +16,4 @@ demonstrates the following:
 * Once instance of the Apiaxle API - how many instances you have
   depends on how busy the API will be. 
 
-![Apiaxle architecture diagram](http://github.com/philjackson/apiaxle/raw/master/docs/sample-architecture.png)
+![Apiaxle architecture diagram](http://github.com/philjackson/apiaxle/raw/master/proxy/docs/sample-architecture.png)
