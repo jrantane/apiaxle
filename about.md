@@ -12,10 +12,10 @@ docs section.
 
 # Why is it?
 
-Apiaxle is different to the cloud based services such as 3scale,
-Apigee and Mashery in that it's intended to be installed within your
-LAN and be managed by you. This means **you own your users**, **you
-own your data** and **you can more easily manage costs**.
+Apiaxle is different to the cloud based services such as Mashery in
+that it's intended to be installed within your LAN and be managed by
+you. This means **you own your users**, **you own your data** and
+**you can more easily manage costs**.
 
 # Open source
 
