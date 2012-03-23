@@ -250,7 +250,15 @@ footer {
   background-color: #ddd;
 }
 
-footer a {
+footer a:link {
+  color: #333;
+}
+
+footer a:hover {
+  color: #333;
+}
+
+footer a:active {
   color: #333;
 }
 
