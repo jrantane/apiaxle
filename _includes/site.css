@@ -6,6 +6,18 @@ html {
   background-color: #ddd;
 }
 
+.alert {
+  margin-top: 20px;
+  padding: 8px 35px 8px 14px;
+  margin-bottom: 18px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: #FCF8E3;
+  border: 1px solid #FBEED5;
+  webkit-border-radius: 4px;
+  moz-border-radius: 4px;
+  border-radius: 4px;
+}
+
 .try-it-now-button {
   background: url(http://github.com/philjackson/apiaxle/raw/gh-pages/img/btn-tryitnow.png) top center no-repeat;
   display:block;
