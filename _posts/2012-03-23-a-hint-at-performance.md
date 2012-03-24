@@ -5,6 +5,11 @@ title: "A hint at performance"
 
 # A hint at performance
 
+* On my not-particularly-fancy desktop machine.
+* Against Facebook's Opengraph API (with a 2 qps limit).
+* 200 concurrent connections.
+* Nginx balancing over four instances of Api Axle. 
+
     Finished 15000 requests
     $VAR1 = {
               '200' => 23,
