@@ -10,6 +10,8 @@ title: "A hint at performance"
 * 200 concurrent connections.
 * Nginx balancing over four instances of Api Axle. 
 
+## Ab output
+
     Finished 15000 requests
     $VAR1 = {
               '200' => 23,
