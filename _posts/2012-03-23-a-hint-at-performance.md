@@ -6,9 +6,10 @@ title: "A hint at performance"
 # A hint at performance
 
 * On my not-particularly-fancy desktop machine.
-* Against Facebook's Opengraph API (with a 2 qps limit).
 * 200 concurrent connections.
 * Nginx balancing over four instances of Api Axle. 
+* Against a test API which sends small amounts of random data with a
+  random latency (hence the 504's when a call times out).
 
 ## Ab output
 
@@ -50,4 +51,3 @@ title: "A hint at performance"
       98%    232
       99%    251
      100%   5225 (longest request)
-
