@@ -14,7 +14,7 @@ title: "A hint at performance"
 ## Ab output
 
     Finished 15000 requests
-    $VAR1 = {
+    $return_codes = {
               '200' => 23,
               '429' => 14966,
               '504' => 11
