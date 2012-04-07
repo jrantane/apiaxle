@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: "Provisioning via the command line"
+description: "How setup APIs and keys via the command line."
 ---
 
 # Provisioning a new API

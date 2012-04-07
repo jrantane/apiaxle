@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: "About & Support"
+description: "What, why and how to contact us."
 ---
 
 # What is it?

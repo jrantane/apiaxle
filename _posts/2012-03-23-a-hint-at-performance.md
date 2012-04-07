@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: "A hint at performance"
+description: "A fairly unscientific look at Api Axle's performance."
 ---
 
 # A hint at performance

@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: "Architecture"
+description: "Architecture overview."
 ---
 
 # {{page.title}}
