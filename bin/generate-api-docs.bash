@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ ! -d "../apiaxle.api" ]]; then
-  echo "No ../apiaxle.api to cd to."
-  exit 1
-fi
+set -e
 
 function output {
   echo "---"
@@ -11,11 +8,18 @@ function output {
   echo "title: \"Api documentation\""
   echo -e "---\n"
 
-  pushd ../apiaxle.api &>/dev/null
-
   ./bin/generate-docs.coffee
-
-  popd &>/dev/null
 }
 
-output > api.md
+here="$(pwd)"
+tmp=$(mktemp -d)
+
+cd "${tmp}"
+git clone "${here}"
+cd apiaxle
+git checkout master
+cd api
+npm install
+npm link ../base
+output > "${here}/api.md"
+
