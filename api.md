@@ -1,8 +1,3 @@
----
-layout: apidocs
-title: "Api documentation"
----
-
 # /v1/api/:api
 ## POST
 
@@ -10,10 +5,12 @@ Add a new API definition for `:api`.
 
 ### Fields supported:
 
+* globalCache - The time in seconds that every call under this API should be cached.
 * endPoint - The endpoint for the API. For example; `graph.facebook.com`
 * apiFormat - (default: json) The resulting data type of the endpoint.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
+* useKeyTokenPair - Use the more secure key/token authentication.
 
 ### Returns:
 
@@ -41,10 +38,12 @@ Update the API `:api`. Will merge fields you pass in.
 
 ### Fields supported:
 
+* globalCache - The time in seconds that every call under this API should be cached.
 * endPoint - The endpoint for the API. For example; `graph.facebook.com`
 * apiFormat - (default: json) The resulting data type of the endpoint.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
+* useKeyTokenPair - Use the more secure key/token authentication.
 
 ### Returns:
 
@@ -57,6 +56,7 @@ Add a new key.
 
 ### Fields supported:
 
+* sharedSecret - A shared secret which is used when signing a call to the api.
 * qpd - (default: 172800) Number of queries that can be called per day. Set to `-1` for no limit.
 * qps - (default: 2) Number of queries that can be called per second. Set to `-1` for no limit.
 * forApi - Name of the Api that this key belongs to.
@@ -72,7 +72,7 @@ Get the details of key `:key`.
 
 ### Returns:
 
-* The key object (including timestamps and the owning user).
+* The key object (including timestamps).
 
 ## DELETE
 
@@ -89,6 +89,7 @@ merged with the old key details.
 
 ### Fields supported:
 
+* sharedSecret - A shared secret which is used when signing a call to the api.
 * qpd - (default: 172800) Number of queries that can be called per day. Set to `-1` for no limit.
 * qps - (default: 2) Number of queries that can be called per second. Set to `-1` for no limit.
 * forApi - Name of the Api that this key belongs to.
