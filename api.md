@@ -15,7 +15,6 @@ Add a new API definition for `:api`.
 * apiFormat - (default: json) The resulting data type of the endpoint.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
-* useKeyTokenPair - Use the more secure key/token authentication.
 
 ### Returns:
 
@@ -48,7 +47,6 @@ Update the API `:api`. Will merge fields you pass in.
 * apiFormat - (default: json) The resulting data type of the endpoint.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
-* useKeyTokenPair - Use the more secure key/token authentication.
 
 ### Returns:
 
