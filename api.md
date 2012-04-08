@@ -1,3 +1,8 @@
+---
+layout: apidocs
+title: "Api documentation"
+---
+
 # /v1/api/:api
 ## POST
 
