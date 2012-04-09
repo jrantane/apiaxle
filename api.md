@@ -12,7 +12,7 @@ Add a new API definition for `:api`.
 
 * globalCache - The time in seconds that every call under this API should be cached.
 * endPoint - The endpoint for the API. For example; `graph.facebook.com`
-* apiFormat - (default: json) The resulting data type of the endpoint.
+* apiFormat - (default: json) The resulting data type of the endpoint. This is redundant at the moment but will eventually support both XML too.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
 
@@ -44,7 +44,7 @@ Update the API `:api`. Will merge fields you pass in.
 
 * globalCache - The time in seconds that every call under this API should be cached.
 * endPoint - The endpoint for the API. For example; `graph.facebook.com`
-* apiFormat - (default: json) The resulting data type of the endpoint.
+* apiFormat - (default: json) The resulting data type of the endpoint. This is redundant at the moment but will eventually support both XML too.
 * endPointTimeout - (default: 2) Seconds to wait before timing out the connection
 * endPointMaxRedirects - (default: 2) Max redirects that are allowed when endpoint called.
 
