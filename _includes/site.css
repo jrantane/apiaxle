@@ -246,7 +246,6 @@ footer {
   margin: 0;
   padding: 0 0 5px 0;
   font-size: 12px;
-  border-top: 1px solid #999;; 
   background-color: #ddd;
 }
 
@@ -437,4 +436,8 @@ input[type="submit"]:hover, input[type="submit"]:focus {
 
 input[type="submit"],  textarea, input[type="text"], label {
   font-size:12px;
+}
+
+#latest-docs {
+  list-style-type: none;
 }

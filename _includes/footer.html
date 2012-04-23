@@ -7,7 +7,7 @@
     </div>
     <div class="span-5 last">
       <h2>Latest documentation</h2>
-      <ul>
+      <ul id="latest-docs">
       {% for post in site.posts %}
         <li>{{ post.date | date:"%Y-%m-%d" }} - <a href="{{ post.url }}">{{ post.title }}</a>
       {% endfor %}
