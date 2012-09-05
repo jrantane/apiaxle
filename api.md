@@ -107,7 +107,14 @@ merged with the old key details.
 
 List the keys in the database.
 
-Supported query params:
+### Path parameters
+
+* from: Integer for the index of the first key you want to
+  see. Starts at zero.
+* from: Integer for the index of the last key you want to
+  see. Starts at zero.
+
+### Supported query params:
 
 * resolve: if set to `true` then the details concerning the listed
   keys will also be printed. Be aware that this will come with a
