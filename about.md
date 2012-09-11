@@ -22,7 +22,7 @@ you. This means **you own your users**, **you own your data** and
 
 Apiaxle is **open-source**. This means you can modify it as much as
 you like and contribute changes back. Others will do the same and
-gradually the system will all the better for it.
+gradually the system will become all the better for it.
 
 # Support & ad-hoc development
 
