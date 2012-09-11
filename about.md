@@ -32,4 +32,4 @@ features, integrate the API into your platform and provide support.
 # Licencing
 
 [Get in touch](mailto:phil@shellarchive.co.uk) if you would like to
-purchase a non-GPL licence for Apiaxle.
+purchase a subscription to a non-GPL licence for Apiaxle.
