@@ -102,6 +102,17 @@ merged with the old key details.
 * The newly inseted structure (including the new timestamp
   fields).
 
+# /v1/key/:key/stats
+## GET
+
+Get the statistics for key `:key`.
+
+### Returns:
+
+* Object where the keys represent the HTTP status code of the
+  endpoint or the error returned by apiaxle (QpsExceededError, for
+  example). Each object contains date to hit count pairs.
+
 # /v1/key/list/:from/:to
 ## GET
 
@@ -126,15 +137,4 @@ List the keys in the database.
   entry.
 * If `resolve` is passed then results will be an object with the
   key name as the key and the details as the value.
-
-# /v1/stats/:key/all
-## GET
-
-Get the statistics for key `:key`.
-
-### Returns:
-
-* Object where the keys represent the HTTP status code of the
-  endpoint or the error returned by apiaxle (QpsExceededError, for
-  example). Each object contains date to hit count pairs.
 
