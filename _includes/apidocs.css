@@ -23,18 +23,6 @@ li {
   margin-left: 50px;
 }
 
-#toc {
-    top: 0px;
-    left: 0px;
-    height: 100%;
-    position: fixed;
-    background: #333;
-    box-shadow: inset -2px 0 5px 0px #000;
-    width: 250px;
-    padding-top: 20px;
-    color: #fff;
-}
-
 #toc ul {
     margin: 0;
     padding: 0;
@@ -45,14 +33,7 @@ li {
     padding: 5px 10px;
 }
 
-#toc a {
-    color: #fff;
-    text-decoration: none;
-    display: block;
-}
-
 #toc .toc-h1 {
-  font-weight: bold;
 }
 
 #toc .toc-h1 a {
@@ -60,17 +41,13 @@ li {
 }
 
 #toc .toc-h2 {
-    padding-left: 10px;
+    padding-left: 20px;
 }
 
 #toc .toc-h3 {
-    padding-left: 20px;
+    padding-left: 40px;
 }
 
 #toc .toc-active {
     background: #fff;
-}
-
-#toc .toc-active a {
-  color: #111;
 }
