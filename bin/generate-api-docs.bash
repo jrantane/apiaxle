@@ -2,24 +2,40 @@
 
 set -e
 
-function output {
-  echo "---"
-  echo "layout: apidocs"
-  echo "title: \"Api documentation\""
-  echo -e "---\n"
-
-  ./bin/generate-docs.coffee
-}
-
 here="$(pwd)"
 tmp=$(mktemp -d)
 
 cd "${tmp}"
-git clone "${here}"
+cp -r "${here}" .
 cd apiaxle
-git checkout master
-cd api
-npm install
-npm link ../base
-output > "${here}/api.md"
 
+# need to do this so that I can test whilst actually editing this
+# script
+git reset --hard &>/dev/null
+
+branch="${1:-master}"
+
+# checkout the supplied or the master branch
+git checkout "${branch}" >/dev/null
+cd api
+npm link ../base &>/dev/null
+
+# output the documentation
+./bin/generate-docs.coffee > "${tmp}/api.md"
+
+# if that worked we can overwrite this branches docs
+cd "${here}"
+mv "${tmp}/api.md" .
+
+# now commit
+git add "api.md"
+git ci -m "Updated documentation via generate-api-docs.bash."
+
+# offer to push, showing diff logs
+git fetch
+
+echo "Stuff that can be pushed:"
+git log --pretty=oneline --decorate=full --abbrev-commit origin/gh-pages..HEAD
+
+read -p "Push? (y/n) "
+[ "$REPLY" == "y" ] && git push origin gh-pages
