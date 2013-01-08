@@ -107,7 +107,7 @@ Fields passed in will will be merged with the old key details.
 ### Returns
 
 * Object where the keys represent the HTTP status code of the
-  endpoint or the error returned by apiaxle (QpsExceededError, for
+  endpoint or the error returned by ApiAxle (QpsExceededError, for
   example). Each object contains date to hit count pairs.
 
 # /v1/key/list/:from/:to

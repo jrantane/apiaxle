@@ -11,7 +11,7 @@ it into your existing architecture. Below is a simple diagram which
 demonstrates the following:
 
 * An Nginx server round-robin distributing requests from the internet
-* Four instances of apiaxle - we recommend running as many instances
+* Four instances of ApiAxle - we recommend running as many instances
   of the ApiAxle proxy as you have cores available.
 * One Redis store which is used by both ApiAxle products.
 * Once instance of the ApiAxle API - how many instances you have
