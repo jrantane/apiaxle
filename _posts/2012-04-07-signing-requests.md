@@ -6,7 +6,7 @@ description: How to sign requests for extra security.
 
 # {{page.title}}
 
-At the cost of a small performance hit, Api Axle supports the signing
+At the cost of a small performance hit, ApiAxle supports the signing
 of requests. Here's how to use and set them up:
 
 ## What makes up a signed request
@@ -16,7 +16,7 @@ There are three parts which make up a signing key:
 * **Shared secret** - this string is supplied on the provisioning of
   the key and will never be revealed in a HTTP request. You would pass
   this to the function that generates the HMAC sig.
-* **Epoch** - the UNIX epoch (seconds since 1970-01-01). Api Axle will
+* **Epoch** - the UNIX epoch (seconds since 1970-01-01). ApiAxle will
   allow for a six second (3 either way) clock drift.
 * **Api key** - the standard key associated with the API.
 
@@ -29,7 +29,7 @@ following:
     $ ./bin/new-key.coffee --for-api=facebook 1234 --shared-secret=bob-the-builder
     
 Now the key `1234` must always carry with it a signed parameter, if it
-doesn't then Api Axle will throw an error and close the door on the
+doesn't then ApiAxle will throw an error and close the door on the
 request.
 
 ## Signing a request as a client

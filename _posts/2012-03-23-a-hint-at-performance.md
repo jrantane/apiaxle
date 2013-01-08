@@ -1,14 +1,14 @@
 ---
 layout: docs
 title: "A hint at performance"
-description: "A fairly unscientific look at Api Axle's performance."
+description: "A fairly unscientific look at ApiAxle's performance."
 ---
 
 # A hint at performance
 
 * On my not-particularly-fancy desktop machine.
 * 200 concurrent connections.
-* Nginx balancing over four instances of Api Axle. 
+* Nginx balancing over four instances of ApiAxle. 
 * Against a test API which sends small amounts of random data with a
   random latency (hence the 504's when a call times out).
 
