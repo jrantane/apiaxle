@@ -7,12 +7,12 @@ class exports.KeyTest extends FakeAppTest
   @empty_db_on_setup = true
 
   "setup model": ( done ) ->
-    @model = @application.model "key"
+    @model = @app.model "keyFactory"
 
     done()
 
   "test initialisation": ( done ) ->
-    @ok @application
+    @ok @app
     @ok @model
 
     @equal @model.ns, "gk:test:key"
@@ -23,7 +23,7 @@ class exports.KeyTest extends FakeAppTest
     createObj =
       qpd: "text"
 
-    @model.create "987654321", createObj, ( err ) =>
+    @fixtures.createKey "987654321", createObj, ( err ) =>
       @ok err
 
       done 1
@@ -34,14 +34,17 @@ class exports.KeyTest extends FakeAppTest
       qpd: 3
       forApi: "twitter"
 
-    @model.create "987654321", createObj, ( err ) =>
+    @fixtures.createKey "987654321", createObj, ( err ) =>
       @ok err
       @equal err.message, "API 'twitter' doesn't exist."
 
       done 2
 
   "test #create with an existant api": ( done ) ->
-    @application.model( "api" ).create "twitter", endPoint: "api.twitter.com", ( err, newApi ) =>
+    options =
+      endPoint: "api.twitter.com"
+
+    @app.model( "apiFactory" ).create "twitter", options, ( err, newApi ) =>
       @isNull err
 
       createObj =
@@ -49,7 +52,7 @@ class exports.KeyTest extends FakeAppTest
         qpd: 3
         forApi: "twitter"
 
-      @model.create "987654321", createObj, ( err ) =>
+      @fixtures.createKey "987654321", createObj, ( err ) =>
         @isNull err
 
         done 2

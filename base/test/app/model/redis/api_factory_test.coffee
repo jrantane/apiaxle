@@ -7,15 +7,15 @@ class exports.ApiTest extends FakeAppTest
   @empty_db_on_setup = true
 
   "setup model": ( done ) ->
-    @model = @application.model "api"
+    @model = @app.model "apiFactory"
 
     done()
 
   "test initialisation": ( done ) ->
-    @ok @application
+    @ok @app
     @ok @model
 
-    @equal @model.ns, "gk:test:api"
+    @equal @model.ns, "gk:test:apifactory"
 
     done 3
 
@@ -34,7 +34,7 @@ class exports.ApiTest extends FakeAppTest
       endPoint: "api.twitter.com"
       extractKeyRegex: "hello("
 
-    @model.create "twitter", newObj, ( err ) =>
+    @fixtures.createApi "twitter", newObj, ( err ) =>
       @ok err
       @match err.message, /Invalid regular expression/
 
@@ -45,13 +45,13 @@ class exports.ApiTest extends FakeAppTest
       apiFormat: "xml"
       endPoint: "api.twitter.com"
 
-    @model.create "twitter", newObj, ( err ) =>
+    @fixtures.createApi "twitter", newObj, ( err ) =>
       @isNull err
 
-      @model.find "twitter", ( err, details ) =>
+      @model.find "twitter", ( err, api ) =>
         @isNull err
 
-        @equal details.apiFormat, "xml"
-        @ok details.createdAt
+        @equal api.data.apiFormat, "xml"
+        @ok api.data.createdAt
 
         done 4

@@ -1,11 +1,18 @@
 { ApiUnknown, ValidationError } = require "../../../lib/error"
-{ Redis } = require "../redis"
+{ Model, Redis } = require "../redis"
 
 validationEnv = require( "schema" )( "apiEnv" )
 
-class exports.Api extends Redis
-  @instantiateOnStartup = true
+class Api extends Model
+  addKey: ( key, cb ) ->
+    @lpush "#{ @id }:keys", key, cb
 
+  getKeys: ( start, stop, cb ) ->
+    @lrange "#{ @id }:keys", start, stop, cb
+
+class exports.ApiFactory extends Redis
+  @instantiateOnStartup = true
+  @returns   = Api
   @structure = validationEnv.Schema.create
     type: "object"
     additionalProperties: false
@@ -18,6 +25,11 @@ class exports.Api extends Redis
         type: "string"
         required: true
         docs: "The endpoint for the API. For example; `graph.facebook.com`"
+      protocol:
+        type: "string"
+        enum: [ "https", "http" ]
+        default: "http"
+        docs: "The protocol for the API, whether or not to use SSL"
       apiFormat:
         type: "string"
         enum: [ "json", "xml" ]
@@ -41,9 +53,3 @@ class exports.Api extends Redis
             return value
           catch err
             throw new ValidationError( err.message )
-
-  addKey: ( api, key ) ->
-    @lpush "#{ api }:keys", key
-
-  getKeys: ( api, start, stop, cb ) ->
-    @lrange "#{ api }:keys", start, stop, cb

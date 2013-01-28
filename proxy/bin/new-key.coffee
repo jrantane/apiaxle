@@ -39,9 +39,9 @@ keys = options.arguments
 
 gk = new ApiaxleProxy()
 gk.script ( finish ) ->
-  model = gk.model "key"
+  model = gk.model "keyFactory"
 
-  all = [ ]
+  all = []
 
   for key in keys
     do( key ) ->
@@ -59,7 +59,7 @@ gk.script ( finish ) ->
             multi.del apiLimits.qpdKey( key )
 
             multi.exec ( ) ->
-              console.log key, newKey
+              console.log key, newKey.data
               cb()
 
   async.series all, ( err ) ->

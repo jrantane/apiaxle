@@ -1,4 +1,4 @@
-async = require "async"
+async  = require "async"
 libxml = require "libxmljs"
 
 { ApiaxleTest } = require "../../apiaxle"
@@ -8,7 +8,7 @@ class exports.CatchallTest extends ApiaxleTest
   @empty_db_on_setup = true
 
   "test POST,GET,PUT and DELETE with no subdomain": ( done ) ->
-    all = [ ]
+    all = []
 
     for method in [ "POST", "GET", "PUT", "DELETE" ]
       do ( method ) =>
@@ -23,7 +23,8 @@ class exports.CatchallTest extends ApiaxleTest
             @ok response
             @equal response.statusCode, 404
 
-            response.parseJson ( json ) =>
+            response.parseJson ( err, json ) =>
+              @isNull err
               # meta
               @equal json.meta.version, 1
               @equal json.meta.status_code, response.statusCode
@@ -40,7 +41,9 @@ class exports.CatchallTest extends ApiaxleTest
       done 34
 
   "test POST,GET,PUT and DELETE with unregistered domain": ( done ) ->
-    all = [ ]
+    all = []
+
+    @stubDns { "twitter.api.localhost": "127.0.0.1" }
 
     for method in [ "POST", "GET", "PUT", "DELETE" ]
       do ( method ) =>
@@ -52,16 +55,13 @@ class exports.CatchallTest extends ApiaxleTest
             data: "something"
 
           @httpRequest options, ( err, response ) =>
-            if err and err.code is "ENOTFOUND"
-              # this usually means missing host entries
-              console.log "WARNING: You might need to put facebook.api.localhost" +
-                " and twitter.api.localhost into your hosts file."
-
             @isNull err
+
             @ok response
             @equal response.statusCode, 404
 
-            response.parseJson ( json ) =>
+            response.parseJson ( err, json ) =>
+              @isNull err
               @ok json.results.error
               @equal json.results.error.type, "ApiUnknown"
 
@@ -71,41 +71,46 @@ class exports.CatchallTest extends ApiaxleTest
       @isNull err
       @equal results.length, 4
 
-      done 22
+      done 26
 
   "test GET with registered domain but no key": ( done ) ->
     apiOptions =
       endPoint: "graph.facebook.com"
       apiFormat: "json"
 
+    @stubDns { "facebook.api.localhost": "127.0.0.1" }
+
     # we create the API
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
       @isNull err
 
       @GET { path: "/", host: "facebook.api.localhost" }, ( err, response ) =>
         @isNull err
 
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @ok err = json.results.error
           @equal err.type, "KeyError"
 
-          done 4
+          done 5
 
   "test GET with registered domain but invalid key": ( done ) ->
     apiOptions =
       endPoint: "graph.facebook.com"
       apiFormat: "json"
-
+    
     # we create the API
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
       @isNull err
 
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET { path: "/?api_key=1", host: "facebook.api.localhost" }, ( err, response ) =>
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @ok err = json.results.error
           @equal err.type, "KeyError"
 
-          done 3
+          done 4
 
   "test GET with registered domain and valid key": ( done ) ->
     apiOptions =
@@ -113,13 +118,13 @@ class exports.CatchallTest extends ApiaxleTest
       apiFormat: "json"
 
     # we create the API
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
       @isNull err
 
       keyOptions =
         forApi: "facebook"
 
-      @application.model( "key" ).create "1234", keyOptions, ( err ) =>
+      @app.model( "keyFactory" ).create "1234", keyOptions, ( err ) =>
         @isNull err
 
         # make sure we don't actually hit facebook
@@ -134,17 +139,21 @@ class exports.CatchallTest extends ApiaxleTest
           path: "/cock.bastard?api_key=1234"
           host: "facebook.api.localhost"
 
+        @stubDns { "facebook.api.localhost": "127.0.0.1" }
         @GET requestOptions, ( err, response ) =>
+          @ok stub.calledOnce
+
           @isNull err
           @equal response.contentType, "application/json"
 
           @ok response.headers[ "x-apiaxleproxy-qps-left" ]
           @ok response.headers[ "x-apiaxleproxy-qpd-left" ]
 
-          response.parseJson ( json ) =>
+          response.parseJson ( err, json ) =>
+            @isNull err
             @equal json.one, 1
 
-            done 7
+            done 9
 
   "test GET with apiaxle_key, rather than api_key": ( done ) ->
     apiOptions =
@@ -152,13 +161,13 @@ class exports.CatchallTest extends ApiaxleTest
       apiFormat: "json"
 
     # we create the API
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
       @isNull err
 
       keyOptions =
         forApi: "facebook"
 
-      @application.model( "key" ).create "1234", keyOptions, ( err ) =>
+      @app.model( "keyFactory" ).create "1234", keyOptions, ( err ) =>
         @isNull err
 
         # make sure we don't actually hit facebook
@@ -172,13 +181,15 @@ class exports.CatchallTest extends ApiaxleTest
           path: "/cock.bastard?apiaxle_key=1234&api_key=5678"
           host: "facebook.api.localhost"
 
+        @stubDns { "facebook.api.localhost": "127.0.0.1" }
         @GET requestOptions, ( err, response ) =>
           @isNull err
 
-          response.parseJson ( json ) =>
+          response.parseJson ( err, json ) =>
+            @isNull err
             @equal json.one, 1
 
-            done 4
+            done 5
 
   "test GET with regex key": ( done ) ->
     apiOptions =
@@ -187,13 +198,13 @@ class exports.CatchallTest extends ApiaxleTest
       extractKeyRegex: "/bastard/([A-Za-z0-9]*)/"
 
     # we create the API
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
       @isNull err
 
       keyOptions =
         forApi: "facebook"
 
-      @application.model( "key" ).create "1234", keyOptions, ( err ) =>
+      @app.model( "keyFactory" ).create "1234", keyOptions, ( err ) =>
         @isNull err
 
         # make sure we don't actually hit facebook
@@ -207,28 +218,33 @@ class exports.CatchallTest extends ApiaxleTest
           path: "/bastard/1234/hello/"
           host: "facebook.api.localhost"
 
+        @stubDns { "facebook.api.localhost": "127.0.0.1" }
         @GET requestOptions, ( err, response ) =>
           @isNull err
 
-          response.parseJson ( json ) =>
+          response.parseJson ( err, json ) =>
+            @isNull err
             @equal json.one, 1
 
-            done 4
+            done 5
 
   "test XML error": ( done ) ->
     apiOptions =
       endPoint: "graph.facebook.com"
       apiFormat: "xml"
 
-    @application.model( "api" ).create "facebook", apiOptions, ( err ) =>
+    @fixtures.createApi "facebook", apiOptions, ( err ) =>
+
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET { path: "/", host: "facebook.api.localhost" }, ( err, response ) =>
         @isNull err
 
         @match response.headers[ "content-type" ], /application\/xml/
 
-        response.parseXml ( xmlDoc ) =>
+        response.parseXml ( err, xmlDoc ) =>
+          @isNull err
           @ok xmlDoc.get "/error"
           @ok xmlDoc.get "/error/type[text()='KeyError']"
           @ok xmlDoc.get "/error/message[text()='No api_key specified.']"
 
-          done 5
+          done 6

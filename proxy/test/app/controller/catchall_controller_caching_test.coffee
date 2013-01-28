@@ -7,13 +7,13 @@ class exports.CatchallTest extends ApiaxleTest
   @empty_db_on_setup = true
 
   "test only get should be cachable": ( done ) ->
-    all = [ ]
+    all = []
 
     for type in [ "Post", "Put", "Delete" ]
-      controller = @application.controller "#{type}Catchall"
+      controller = @app.controller "#{type}Catchall"
 
       req =
-        headers: { }
+        headers: {}
         api:
           globalCache: 20
 
@@ -29,9 +29,9 @@ class exports.CatchallTest extends ApiaxleTest
       done 9
 
   _runCacheControlTests: ( tests, cb ) ->
-    controller = @application.controller "GetCatchall"
+    controller = @app.controller "GetCatchall"
 
-    runnables = [ ]
+    runnables = []
 
     for test in tests
       do ( test ) =>
@@ -46,7 +46,7 @@ class exports.CatchallTest extends ApiaxleTest
     async.series runnables, cb
 
   "test #_cacheControl 'no-cache'": ( done ) ->
-    tests = [ ]
+    tests = []
 
     tests.push
       req:
@@ -84,7 +84,7 @@ class exports.CatchallTest extends ApiaxleTest
       done 10
 
   "test #_cacheControl 's-maxage'": ( done ) ->
-    tests = [ ]
+    tests = []
 
     # check that s-maxage overrides globalCache
     tests.push
@@ -114,11 +114,16 @@ class exports.CatchallTest extends ApiaxleTest
       done 7
 
   "test global caching miss": ( done ) ->
-    apiOptions =
-      apiFormat: "json"
-      globalCache: 20
+    fix =
+      api:
+        facebook:
+          apiFormat: "json"
+          globalCache: 20
+      key:
+        1234:
+          forApi: "facebook"
 
-    @newApiAndKey "facebook", apiOptions, "1234", null, ( err ) =>
+    @fixtures.create fix, ( err ) =>
       @isNull err
 
       # make sure we don't actually hit facebook
@@ -131,12 +136,14 @@ class exports.CatchallTest extends ApiaxleTest
         path: "/cock.bastard?api_key=1234"
         host: "facebook.api.localhost"
 
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET requestOptions, ( err, response ) =>
         @isNull err
 
         @ok stub.calledOnce
 
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @isUndefined json.error
           @deepEqual json.two, 2
 
@@ -150,10 +157,10 @@ class exports.CatchallTest extends ApiaxleTest
             @isUndefined json.error
             @deepEqual json.two, 2
 
-            done 9
+            done 10
 
   "test #_parseCacheControl": ( done ) ->
-    controller = @application.controller "GetCatchall"
+    controller = @app.controller "GetCatchall"
 
     res = controller._parseCacheControl
       headers:
@@ -166,10 +173,15 @@ class exports.CatchallTest extends ApiaxleTest
     done 1
 
   "test caching at controller level": ( done ) ->
-    apiOptions =
-      apiFormat: "json"
+    fixture =
+      api:
+        facebook:
+          apiFormat: "json"
+      key:
+        1234:
+          forApi: "facebook"
 
-    @newApiAndKey "facebook", apiOptions, "1234", null, ( err ) =>
+    @fixtures.create fixture, ( err ) =>
       @isNull err
 
       # make sure we don't actually hit facebook
@@ -184,6 +196,7 @@ class exports.CatchallTest extends ApiaxleTest
         headers:
           "Cache-Control": "s-maxage=30"
 
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET requestOptions, ( err, response ) =>
         @isNull err
         @ok stub.calledOnce
@@ -191,7 +204,8 @@ class exports.CatchallTest extends ApiaxleTest
         @equal response.statusCode, 202
         @equal response.headers[ "content-type" ], "application/json"
 
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @isUndefined json.error
           @deepEqual json.two, 2
 
@@ -202,7 +216,8 @@ class exports.CatchallTest extends ApiaxleTest
             @equal response.statusCode, 202
             @equal response.headers[ "content-type" ], "application/json"
 
-            response.parseJson ( json ) =>
+            response.parseJson ( err, json ) =>
+              @isNull err
               @isUndefined json.error
 
               # we shouldn't have called the http req again
@@ -211,14 +226,19 @@ class exports.CatchallTest extends ApiaxleTest
               @isUndefined json.error
               @deepEqual json.two, 2
 
-              done 14
+              done 16
 
   "test caching at controller level (no-cache)": ( done ) ->
-    apiOptions =
-      apiFormat: "json"
-      globalCache: 30
+    fixture =
+      api:
+        facebook:
+          apiFormat: "json"
+          globalCache: 30
+      key:
+        1234:
+          forApi: "facebook"        
 
-    @newApiAndKey "facebook", apiOptions, "1234", null, ( err ) =>
+    @fixtures.create fixture, ( err ) =>
       @isNull err
 
       # make sure we don't actually hit facebook
@@ -233,12 +253,14 @@ class exports.CatchallTest extends ApiaxleTest
         headers:
           "Cache-Control": "no-cache"
 
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET requestOptions, ( err, response ) =>
         @isNull err
 
         @ok stub.calledOnce
 
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @isUndefined json.error
           @deepEqual json.two, 2
 
@@ -252,15 +274,19 @@ class exports.CatchallTest extends ApiaxleTest
             @isUndefined json.error
             @deepEqual json.two, 2
 
-            done 9
-
+            done 10
 
   "test caching at controller level (revalidate)": ( done ) ->
-    apiOptions =
-      apiFormat: "json"
-      globalCache: 30
+    fixture =
+      api:
+        facebook:
+          apiFormat: "json"
+          globalCache: 30
+      key:
+        1234:
+          forApi: "facebook"
 
-    @newApiAndKey "facebook", apiOptions, "1234", null, ( err ) =>
+    @fixtures.create fixture, ( err ) =>
       @isNull err
 
       # make sure we don't actually hit facebook
@@ -275,12 +301,14 @@ class exports.CatchallTest extends ApiaxleTest
         headers:
           "Cache-Control": "s-maxage=30, proxy-revalidate"
 
+      @stubDns { "facebook.api.localhost": "127.0.0.1" }
       @GET requestOptions, ( err, response ) =>
         @isNull err
 
         @ok stub.calledOnce
 
-        response.parseJson ( json ) =>
+        response.parseJson ( err, json ) =>
+          @isNull err
           @isUndefined json.error
           @deepEqual json.two, 2
 
@@ -294,4 +322,4 @@ class exports.CatchallTest extends ApiaxleTest
             @isUndefined json.error
             @deepEqual json.two, 2
 
-            done 9
+            done 10

@@ -6,21 +6,17 @@ _ = require "underscore"
 class exports.ListKeys extends ListController
   @verb = "get"
 
-  path: -> "/v1/key/list/:from/:to"
+  path: -> "/v1/keys"
 
   desc: -> "List all of the available keys."
 
   docs: ->
     """
-    ### Path parameters
-
+    ### Supported query params
     * from: Integer for the index of the first key you want to
       see. Starts at zero.
     * to: Integer for the index of the last key you want to
       see. Starts at zero.
-
-    ### Supported query params
-
     * resolve: if set to `true` then the details concerning the listed
       keys will also be printed. Be aware that this will come with a
       minor performace hit.
@@ -33,7 +29,7 @@ class exports.ListKeys extends ListController
       key name as the key and the details as the value.
     """
 
-  modelName: -> "key"
+  modelName: -> "keyFactory"
 
 class exports.CreateKey extends ApiaxleController
   @verb = "post"
@@ -44,7 +40,7 @@ class exports.CreateKey extends ApiaxleController
     """
     ### JSON fields supported
 
-    #{ @app.model( 'key' ).getValidationDocs() }
+    #{ @app.model( 'keyFactory' ).getValidationDocs() }
 
     ### Returns
 
@@ -61,10 +57,10 @@ class exports.CreateKey extends ApiaxleController
     if req.key?
       return next new AlreadyExists "#{ key } already exists."
 
-    @app.model( "key" ).create req.params.key, req.body, ( err, newObj ) =>
+    @app.model( "keyFactory" ).create req.params.key, req.body, ( err, newObj ) =>
       return next err if err
 
-      @json res, newObj
+      @json res, newObj.data
 
 class exports.ViewKey extends ApiaxleController
   @verb = "get"
@@ -78,12 +74,12 @@ class exports.ViewKey extends ApiaxleController
     * The key object (including timestamps).
     """
 
-  middleware: -> [ @mwKeyDetails( valid_api_required=true ) ]
+  middleware: -> [ @mwKeyDetails( valid_key_required=true ) ]
 
   path: -> "/v1/key/:key"
 
   execute: ( req, res, next ) ->
-    @json res, req.key
+    @json res, req.key.data
 
 class exports.DeleteKey extends ApiaxleController
   @verb = "delete"
@@ -97,12 +93,12 @@ class exports.DeleteKey extends ApiaxleController
     * `true` on success.
     """
 
-  middleware: -> [ @mwKeyDetails( valid_api_required=true ) ]
+  middleware: -> [ @mwKeyDetails( valid_key_required=true ) ]
 
   path: -> "/v1/key/:key"
 
   execute: ( req, res, next ) ->
-    model = @app.model "key"
+    model = @app.model "keyFactory"
 
     model.del req.params.key, ( err, newKey ) =>
       return next err if err
@@ -120,7 +116,7 @@ class exports.ModifyKey extends ApiaxleController
 
     ### JSON fields supported
 
-    #{ @app.model( 'key' ).getValidationDocs() }
+    #{ @app.model( 'keyFactory' ).getValidationDocs() }
 
     ### Returns
 
@@ -130,26 +126,26 @@ class exports.ModifyKey extends ApiaxleController
 
   middleware: -> [
     @mwContentTypeRequired( ),
-    @mwKeyDetails( valid_api_required=true )
+    @mwKeyDetails( valid_key_required=true )
   ]
 
   path: -> "/v1/key/:key"
 
   execute: ( req, res, next ) ->
-    model = @app.model "key"
+    model = @app.model "keyFactory"
 
     # validate the input
     model.validate req.body, ( err ) =>
       return next err if err
 
       # modify the key
-      _.extend req.key, req.body
+      _.extend req.key.data, req.body
 
       # re-apply it to the db
-      model.create req.params.key, req.key, ( err, newKey ) =>
+      model.create req.params.key, req.key.data, ( err, newKey ) =>
         return next err if err
 
-        @json res, newKey
+        @json res, newKey.json
 
 class exports.ViewAllStatsForKey extends ApiaxleController
   @verb = "get"
@@ -165,28 +161,40 @@ class exports.ViewAllStatsForKey extends ApiaxleController
       example). Each object contains date to hit count pairs.
     """
 
-  middleware: -> [ @mwKeyDetails( valid_api_required=true ) ]
+  middleware: -> [ @mwKeyDetails( valid_key_required=true ) ]
 
   path: -> "/v1/key/:key/stats"
 
   execute: ( req, res, next ) ->
     model = @app.model "counters"
-    model.getPossibleResponseTypes req.params.key, ( err, types ) =>
+    model.getPossibleResponseTypes "key:#{ req.params.key }", ( err, types ) =>
       return next err if err
 
-      multi = model.multi()
+      multi  = model.multi()
+      from   = req.query["from-date"]
+      to     = req.query["to-date"]
+      ranged = from and to
 
       for type in types
-        do ( type ) ->
-          multi.hgetall [ req.params.key, type ]
+        do ( type ) =>
+          if ranged
+            multi = @getStatsRange multi, "key", req.params.key, type, from, to
+          else
+            multi.hgetall [ "key", req.params.key, type ]
 
       multi.exec ( err, results ) =>
         return next err if err
 
         # build up the output structure
         output = {}
+        processed_results = []
+
+        if ranged
+          processed_results = @combineStatsRange results, from, to
+        else
+          processed_results = results
 
         for type in types
-          output[ type ] = results.shift()
+          output[ type ] = processed_results.shift()
 
         return @json res, output

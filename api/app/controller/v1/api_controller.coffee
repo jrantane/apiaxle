@@ -12,14 +12,15 @@ class exports.CreateApi extends ApiaxleController
     """
     ### JSON fields supported
 
-    #{ @app.model( 'api' ).getValidationDocs() }
+    #{ @app.model( 'apiFactory' ).getValidationDocs() }
 
     ### Returns
 
     * The inserted structure (including the new timestamp fields).
     """
 
-  middleware: -> [ @mwContentTypeRequired(), @mwApiDetails( ) ]
+  middleware: -> [ @mwContentTypeRequired(),
+                   @mwApiDetails( ) ]
 
   path: -> "/v1/api/:api"
 
@@ -28,10 +29,10 @@ class exports.CreateApi extends ApiaxleController
     if req.api?
       return next new AlreadyExists "#{ api } already exists."
 
-    @app.model( "api" ).create req.params.api, req.body, ( err, newObj ) =>
+    @app.model( "apiFactory" ).create req.params.api, req.body, ( err, newObj ) =>
       return next err if err
 
-      @json res, newObj
+      @json res, newObj.data
 
 class exports.ViewApi extends ApiaxleController
   @verb = "get"
@@ -50,7 +51,7 @@ class exports.ViewApi extends ApiaxleController
   path: -> "/v1/api/:api"
 
   execute: ( req, res, next ) ->
-    @json res, req.api
+    @json res, req.api.data
 
 class exports.DeleteApi extends ApiaxleController
   @verb = "delete"
@@ -69,7 +70,7 @@ class exports.DeleteApi extends ApiaxleController
   path: -> "/v1/api/:api"
 
   execute: ( req, res, next ) ->
-    model = @app.model "api"
+    model = @app.model "apiFactory"
 
     model.del req.params.api, ( err, newApi ) =>
       return next err if err
@@ -86,7 +87,7 @@ class exports.ModifyApi extends ApiaxleController
 
     ### JSON fields supported
 
-    #{ @app.model( 'api' ).getValidationDocs() }
+    #{ @app.model( 'apiFactory' ).getValidationDocs() }
 
     ### Returns
 
@@ -101,10 +102,10 @@ class exports.ModifyApi extends ApiaxleController
   path: -> "/v1/api/:api"
 
   execute: ( req, res, next ) ->
-    model = @app.model "api"
+    model = @app.model "apiFactory"
 
     # modify the old api struct
-    newData = _.extend req.api, req.body
+    newData = _.extend req.api.data, req.body
 
     # validate it
     model.validate newData, ( err, instance ) =>
@@ -114,26 +115,23 @@ class exports.ModifyApi extends ApiaxleController
       model.create req.params.api, instance, ( err, newApi ) =>
         return next err if err
 
-        @json res, newApi
+        @json res, newApi.data
 
 class exports.ListApis extends ListController
   @verb = "get"
 
-  path: -> "/v1/api/list/:from/:to"
+  path: -> "/v1/apis"
 
   desc: -> "List all APIs."
 
   docs: ->
     """
-    ### Path parameters
+    ### Supported query params
 
     * from: Integer for the index of the first api you want to
       see. Starts at zero.
     * to: Integer for the index of the last api you want to
       see. Starts at zero.
-
-    ### Supported query params
-
     * resolve: if set to `true` then the details concerning the listed
       apis  will also be printed. Be aware that this will come with a
       minor performace hit.
@@ -146,26 +144,23 @@ class exports.ListApis extends ListController
       api name as the api and the details as the value.
     """
 
-  modelName: -> "api"
+  modelName: -> "apiFactory"
 
-class exports.ListApiKeys extends ApiaxleController
+class exports.ListApiKeys extends ListController
   @verb = "get"
 
-  path: -> "/v1/api/:api/keys/:from/:to"
+  path: -> "/v1/api/:api/keys"
 
   desc: -> "List keys belonging to an API."
 
   docs: ->
     """
-    ### Path parameters
+    ### Supported query params
 
     * from: Integer for the index of the first key you want to
       see. Starts at zero.
     * to: Integer for the index of the last key you want to
       see. Starts at zero.
-
-    ### Supported query params
-
     * resolve: if set to `true` then the details concerning the listed
       keys will also be printed. Be aware that this will come with a
       minor performace hit.
@@ -178,17 +173,65 @@ class exports.ListApiKeys extends ApiaxleController
       key name as the key and the details as the value.
     """
 
-  modelName: -> "api"
-
   middleware: -> [ @mwApiDetails( @app ) ]
 
   execute: ( req, res, next ) ->
-    @app.model( "api" ).getKeys req.params.api, req.params.from, req.params.to, ( err, results ) =>
-      return next err if err
+    req.api.getKeys @from( req ), @to( req ), ( err, keys ) =>
+      return next err if err      
+      return @json res, keys if not req.query.resolve?
 
-      if not req.query.resolve?
+      @resolve @app.model( "keyFactory" ), keys, ( err, results ) =>
+        return cb err if err
         return @json res, results
 
-      @resolve @app.model("key"), results, (err, resolved_results) =>
+class exports.ViewAllStatsForApi extends ApiaxleController
+  @verb = "get"
+
+  desc: -> "Get the statistics for an api."
+
+  docs: ->
+    """
+    ### Returns
+
+    * Object where the keys represent the HTTP status code of the
+      endpoint or the error returned by apiaxle (QpsExceededError, for
+      example). Each object contains date to hit count pairs.
+    """
+
+  middleware: -> [ @mwApiDetails( @app ) ]
+
+  path: -> "/v1/api/:api/stats"
+
+  execute: ( req, res, next ) ->
+    model = @app.model "counters"
+    model.getPossibleResponseTypes "api:#{ req.params.api }", ( err, types ) =>
+      return next err if err
+
+      multi  = model.multi()
+      from   = req.query["from-date"]
+      to     = req.query["to-date"]
+      ranged = from and to
+
+      for type in types
+        do ( type ) =>
+          if ranged
+            multi = @getStatsRange multi, "api", req.params.api, type, from, to
+          else
+            multi.hgetall [ "api", req.params.api, type ]
+
+      multi.exec ( err, results ) =>
         return next err if err
-        return @json res, resolved_results
+
+        # build up the output structure
+        output = {}
+        processed_results = []
+
+        if ranged
+          processed_results = @combineStatsRange results, from, to
+        else
+          processed_results = results
+
+        for type in types
+          output[ type ] = processed_results.shift()
+
+        return @json res, output

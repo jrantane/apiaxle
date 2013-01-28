@@ -38,7 +38,7 @@ if [[ -f /proc/version ]]; then
   fi
 fi
 
-git clone git://github.com/philjackson/apiaxle.git
+git clone git://github.com/apiaxle/apiaxle.git
 
 cd apiaxle
 

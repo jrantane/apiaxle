@@ -1,12 +1,15 @@
 fs     = require "fs"
+dns    = require "dns"
 http   = require "http"
 path   = require "path"
 sinon  = require "sinon"
 async  = require "async"
 libxml = require "libxmljs"
+_      = require "underscore"
 
 { Application } = require "./application"
 { TwerpTest }   = require "twerp"
+{ Redis }       = require "../app/model/redis"
 
 class Clock
   constructor: ( @sinonClock ) ->
@@ -54,34 +57,63 @@ class AppResponse
       callback jq
 
   parseXml: ( callback ) ->
-    callback libxml.parseXmlString @data
+    try
+      output = libxml.parseXmlString @data
+    catch err
+      return callback err, null
+
+    return callback null, output
 
   parseJson: ( callback ) ->
-    output = JSON.parse @data, "utf8"
+    try
+      output = JSON.parse @data, "utf8"
+    catch err
+      return callback err, null
 
-    callback output
+    return callback null, output
+
+application_mem = null
+application_fixtures = null
 
 class exports.AppTest extends TwerpTest
   @port = 26100
 
   constructor: ( options ) ->
     # avoid re-reading configuration and stuff
-    @application = if application_mem
+    @app = if application_mem
       application_mem
     else
       application_mem = new @constructor.appClass().configureModels()
                                                    .configureControllers()
 
-    @stubs = [ ]
-    @spies  = [ ]
+    @stubs = []
+    @spies  = []
+
+    # fixture lists, persist over lifetime
+    @fixtures = if application_fixtures
+      application_fixtures
+    else
+      application_fixtures = new Fixtures @app
 
     super options
+
+  stubDns: ( mapping ) ->
+    # we need to avoid hitting twitter.api.localhost because it won't
+    # exist on everyone's machine
+    old = dns.lookup
+
+    @getStub dns, "lookup", ( domain, cb ) ->
+      for name, address of mapping
+        if domain is name
+          return cb null, address, 4
+
+      return old domain, cb
 
   getClock: ( seed=new Date().getTime() ) ->
     new Clock @sandbox.useFakeTimers( seed )
 
   startWebserver: ( done ) ->
-    @application.run "127.0.0.1", @constructor.port, done
+    @app.run "127.0.0.1", @constructor.port, done
 
   # returns a AppResponse object
   httpRequest: ( options, callback ) ->
@@ -97,6 +129,7 @@ class exports.AppTest extends TwerpTest
     for key, val of defaults
       options[ key ] = val unless options[ key ]
 
+    @app.logger.debug "Making a #{ options.method} to #{ options.path }"
     req = http.request options, ( res ) =>
       data = ""
       res.setEncoding "utf8"
@@ -154,15 +187,15 @@ class exports.AppTest extends TwerpTest
     @httpRequest options, callback
 
   start: ( done ) ->
-    chain = [ ]
+    chain = []
 
-    @runRedisCommands = [ ]
+    @runRedisCommands = []
 
     if @constructor.start_webserver
       chain.push ( cb ) =>
         @startWebserver cb
 
-    chain.push @application.redisConnect
+    chain.push @app.redisConnect
 
     wrapCommand = ( access, model, command, fullkey ) ->
       access: access
@@ -172,7 +205,7 @@ class exports.AppTest extends TwerpTest
 
     # capture each redis event as it happens so that we can see what
     # we've been running
-    for name, model of @application.models
+    for name, model of @app.models
       do( name, model ) =>
         model.ee.on "read", ( command, fullkey ) =>
           @runRedisCommands.push wrapCommand( "read", name, command, fullkey )
@@ -186,11 +219,11 @@ class exports.AppTest extends TwerpTest
 
   finish: ( done ) ->
     # this is synchronous
-    @application.app.close( ) if @constructor.start_webserver
-    @application.redisClient.quit( )
+    @app.app.close( ) if @constructor.start_webserver
+    @app.redisClient.quit( )
 
     # remove the redis emitters
-    for name, model of @application.models
+    for name, model of @app.models
       do( name, model ) =>
         model.ee.removeAllListeners "read"
         model.ee.removeAllListeners "write"
@@ -204,24 +237,34 @@ class exports.AppTest extends TwerpTest
 
     done( )
 
+  flushAllKeys: ( cb ) ->
+    base_object = new Redis @app
+
+    @app.redisClient.keys [ "#{ base_object.base_key }*" ], ( err, keys ) =>
+      multi = @app.redisClient.multi()
+
+    @app.redisClient.keys [ "#{ base_object.base_key }*" ], ( err, keys ) =>
+      multi = @app.redisClient.multi()
+
+      for key in keys
+        multi.del key, ( err ) ->
+          return cb err if err
+
+      multi.exec cb
+
   "setup": ( done ) ->
-    tasks = [ ]
+    tasks = []
 
     # sanbox for sinon
     @sandbox = sinon.sandbox.create()
 
+    @runRedisCommands = []
+
     # flush the database first
     if @constructor.empty_db_on_setup
-      for name, model of @application.models
-        do ( model ) ->
-          tasks.push ( cb ) ->
-            model.flush cb
-
-    tasks.push ( cb ) =>
-      @runRedisCommands = [ ]
-      cb()
-
-    async.series tasks, done
+      @flushAllKeys done
+    else
+      done()
 
   fakeIncomingMessage: ( status, data, headers, callback ) ->
     res = new http.IncomingMessage( )
@@ -233,3 +276,79 @@ class exports.AppTest extends TwerpTest
 
     res.emit "data", data
     res.emit "end"
+
+class Fixtures
+  constructor: ( @app ) ->
+    @api_names  = require "../test/fixtures/api-fixture-names.json"
+    @bucket_ids = require "../test/fixtures/key-bucket-fixture-names.json"
+    @keys       = [ 1..1000 ]
+
+  create: ( data, cb ) ->
+    all = [ ]
+
+    # add any new convenience methods here
+    type_map =
+      api: @createApi
+      key: @createKey
+      keyring: @createKeyring
+
+    # loop over the structure grabbing the names and details
+    for type, item of data
+      if not type in _.keys type_map
+        return cb new Error "Don't know how to handle #{ type }"
+
+      for name, details of item
+        do( type, name, details ) =>
+          all.push ( cb ) =>
+            type_map[ type ]( name, details, cb )
+
+    async.series all, cb
+
+  createKeyring: ( args..., cb ) =>
+    name    = null
+    options = { }
+
+    # grab the optional args and make sure a name is assigned
+    switch args.length
+      when 2 then [ name, options ] = args
+      when 1 then [ name ] = args
+      else name = "bucket-#{ @keys.pop() }"
+
+    @app.model( "keyringFactory" ).create "#{ name }", options, cb
+
+  createKey: ( args..., cb ) =>
+    name = null
+
+    passed_options  = { }
+    default_options =
+      forApi: "twitter"
+
+    # grab the optional args and make sure a name is assigned
+    switch args.length
+      when 2 then [ name, passed_options ] = args
+      when 1 then [ name ] = args
+      else name = @keys.pop()
+
+    # merge the options
+    options = _.extend default_options, passed_options
+
+    @app.model( "keyFactory" ).create "#{ name }", options, cb
+
+  createApi: ( args..., cb ) =>
+    name = null
+
+    passed_options  = { }
+    default_options =
+      endPoint: "api.twitter.com"
+      apiFormat: "json"
+
+    # grab the optional args and make sure a name is assigned
+    switch args.length
+      when 2 then [ name, passed_options ] = args
+      when 1 then [ name ] = args
+      else name = @api_names.pop()
+
+    # merge the options
+    options = _.extend default_options, passed_options
+
+    @app.model( "apiFactory" ).create name, options, cb

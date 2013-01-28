@@ -1,5 +1,14 @@
+moment = require "moment"
+_      = require "underscore"
+
 { Controller } = require "apiaxle.base"
-{ NotFoundError, InvalidContentType, ApiUnknown, ApiKeyError } = require "../../lib/error"
+
+{ KeyNotFoundError,
+  ApiNotFoundError,
+  KeyringNotFoundError,
+  InvalidContentType,
+  ApiUnknown,
+  ApiKeyError } = require "../../lib/error"
 
 class exports.ApiaxleController extends Controller
   # Used output data conforming to a standard Api Axle
@@ -20,9 +29,10 @@ class exports.ApiaxleController extends Controller
     # build up the requests, grab the keys and zip into a new
     # hash
     multi = model.multi()
-    multi.hgetall result for result in keys
+    for result in keys
+      multi.hgetall result 
 
-    final = { }
+    final = {}
 
     # grab the accumulated keys
     multi.exec ( err, accKeys ) ->
@@ -37,17 +47,36 @@ class exports.ApiaxleController extends Controller
   # Will decorate `req.key` with details of the key specified in the
   # `:key` parameter. If `valid_key_required` is truthful then an
   # error will be thrown if a valid key wasn't found.
-  mwKeyDetails: ( valid_api_required=false ) ->
+  mwKeyDetails: ( valid_key_required=false ) ->
     ( req, res, next ) =>
-      api_key = req.params.key
+      key = req.params.key
 
-      @app.model( "key" ).find api_key, ( err, dbKey ) ->
+      @app.model( "keyFactory" ).find key, ( err, dbKey ) ->
         return next err if err
 
-        if valid_api_required and not dbKey?
-          return next new NotFoundError "#{ api_key } not found."
+        if valid_key_required and not dbKey?
+          return next new KeyNotFoundError "Key '#{ key }' not found."
 
         req.key = dbKey
+
+        return next()
+
+  # Will decorate `req.keyring` with details of the keyring specified
+  # in the `:keyring` parameter. If `valid_keyring_required` is
+  # truthful then an error will be thrown if a valid keyring wasn't
+  # found.
+  mwKeyringDetails: ( valid_keyring_required=false ) ->
+    ( req, res, next ) =>
+      keyring = req.params.keyring
+
+      @app.model( "keyringFactory" ).find keyring, ( err, dbKeyring ) ->
+        return next err if err
+
+        # do we /need/ the keyring to exist?
+        if valid_keyring_required and not dbKeyring?
+          return next new KeyringNotFoundError "Keyring '#{ keyring }' not found."
+
+        req.keyring = dbKeyring
 
         return next()
 
@@ -58,12 +87,12 @@ class exports.ApiaxleController extends Controller
     ( req, res, next ) =>
       api = req.params.api
 
-      @app.model( "api" ).find api, ( err, dbApi ) ->
+      @app.model( "apiFactory" ).find api, ( err, dbApi ) ->
         return next err if err
 
         # do we /need/ the api to exist?
         if valid_api_required and not dbApi?
-          return next new NotFoundError "#{ api } not found."
+          return next new ApiNotFoundError "Api '#{ api }' not found."
 
         req.api = dbApi
 
@@ -84,11 +113,51 @@ class exports.ApiaxleController extends Controller
 
       return next()
 
+  # Gets a range of stats from Redis
+  # Stats are keyed by stat_type ('api' or 'key') and day
+  # Returns a Redis multi
+  getStatsRange: ( multi, stat_type, stat_key, response_type, from_date, to_date ) ->
+    from  = moment(from_date)
+    to    = moment(to_date)
+    days  = to.diff from, "days"
+
+    for i in [0..days]
+      date = from.format "YYYY-M-D"
+      from.add "days",1
+      multi.hgetall [ stat_type, stat_key, date, response_type ]
+
+    return multi
+
+  combineStatsRange: ( results, from_date, to_date ) ->
+    from  = moment(from_date)
+    to    = moment(to_date)
+    days  = to.diff from, "days"
+
+    processed_results = []
+    while results.length > 0
+      merged = {}
+      for i in [0..days]
+        result = results.shift()
+        merged = _.extend merged, result
+      processed_results.push merged
+
+    return processed_results
+
 class exports.ListController extends exports.ApiaxleController
+  @default_from = 0
+  @default_to   = 100
+
+  # calculate from and to
+  from: ( req ) ->
+    return ( req.query.from or @constructor.default_from )
+
+  to: ( req ) ->
+    return ( req.query.to or @constructor.default_to )
+
   execute: ( req, res, next ) ->
     model = @app.model( @modelName() )
 
-    model.range req.params.from, req.params.to, ( err, keys ) =>
+    model.range @from( req ), @to( req ), ( err, keys ) =>
       return next err if err
 
       # if we're not asked to resolve the items then just bung the

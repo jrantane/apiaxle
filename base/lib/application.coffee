@@ -18,7 +18,7 @@ class exports.Application
   @env = ( process.env.NODE_ENV or "development" )
 
   constructor: ( ) ->
-    app = module.exports = express.createServer( )
+    app = module.exports = express.createServer()
 
     @_configure app
 
@@ -47,7 +47,7 @@ class exports.Application
     return @
 
   configureControllers: ( ) ->
-    @controllers = { }
+    @controllers = {}
 
     return @ unless @constructor.controllersPath
 
@@ -68,7 +68,7 @@ class exports.Application
     return @
 
   configureModels: ( ) ->
-    @.models or= { }
+    @.models or= {}
 
     modelPaths = @_modelList( "#{ __dirname }/../app/model" )
 
@@ -80,11 +80,11 @@ class exports.Application
       current = require( modelPath )
 
       for model, func of current
+        # lowercase the first char of the model name
+        modelName = model.charAt( 0 ).toLowerCase() + model.slice( 1 )
+
         if func.instantiateOnStartup
           @logger.info "Loading model '#{model}'"
-
-          # lowercase the first char of the model name
-          modelName = model.charAt( 0 ).toLowerCase() + model.slice( 1 )
 
           # models take an instance of this class as an argument to the
           # constructor. This gives us something like
@@ -100,7 +100,7 @@ class exports.Application
     @.controllers[ name ] or null
 
   _modelList: ( initialPath ) ->
-    list = [ ]
+    list = []
 
     walkTreeSync initialPath, null, ( path, filename, stats ) ->
       return unless /\.(coffee|js)$/.exec filename
@@ -111,7 +111,7 @@ class exports.Application
 
   # grab the list of controllers (which can just be required)
   _controllerList: ( ) ->
-    list = [ ]
+    list = []
 
     walkTreeSync @constructor.controllersPath, null, ( path, filename, stats ) ->
       return unless /_controller\.(coffee|js)$/.exec filename
@@ -128,10 +128,10 @@ class exports.Application
     return list
 
   _configure: ( app ) ->
-    app.configure ( ) =>
-      # load up /our/ configuration (from the files in /config)
-      @config = require( "./app_config" )( Application.env )
+    # load up /our/ configuration (from the files in /config)
+    @config = require( "./app_config" )( Application.env )
 
+    app.configure ( ) =>
       @configureGeneral app
 
       app.configure "test",        ( ) => @_configureForTest app
@@ -178,7 +178,7 @@ class exports.Application
       output.error.stack = err.stack
 
     # json
-    if req.api?.apiFormat isnt "xml"
+    if req.api?.data.apiFormat isnt "xml"
       meta =
         version: 1
         status_code: err.constructor.status

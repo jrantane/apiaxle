@@ -6,13 +6,14 @@ events = require "events"
 redis = require "redis"
 
 class Redis
-  constructor: ( @application ) ->
-    env = @application.constructor.env
+  constructor: ( @app ) ->
+    env =  @app.constructor.env
     name = @constructor.smallKeyName or @constructor.name.toLowerCase()
 
-    @ee = new events.EventEmitter()
+    @base_key = "gk:#{ env }"
 
-    @ns = "gk:#{ env }:#{ name }"
+    @ee = new events.EventEmitter()
+    @ns = "#{ @base_key }:#{ name }"
 
   validate: ( details, cb ) ->
     try
@@ -24,6 +25,10 @@ class Redis
     @validate details, ( err, instance ) =>
       return cb err if err
 
+      # need to escape the key so that people don't use colons and
+      # trick redis into overwrting other keys
+      id = @escapeId id
+
       multi = @multi()
 
       details.createdAt = new Date().getTime()
@@ -33,45 +38,50 @@ class Redis
 
       # then add it to its list so that we can do range queries on it
       # later.
-      multi.rpush "all", id
+      multi.rpush "meta:all", id
 
-      multi.exec ( err, results ) ->
+      multi.exec ( err, results ) =>
         return cb err if err
 
-        cb null, details
+        # no data means no object
+        return cb null, null unless results
+
+        # construct a new return object (see @returns on the factory
+        # base class)
+        if @constructor.returns?
+          return cb null, new @constructor.returns( @app, id, details )
+
+        # no returns object, just throw back the data
+        return cb null, details
 
   range: ( start, stop, cb ) ->
-    @lrange "all", start, stop, cb
+    @lrange "meta:all", start, stop, cb
 
-  find: ( key, cb ) ->
-    @hgetall key, ( err, details ) ->
+  # escape the id so that people can't sneak a colon in and do
+  # something like modify metadata
+  escapeId: ( id ) ->
+    return id.replace( /([:])/g, "\\:" )
+
+  find: ( id, cb ) ->
+    id = @escapeId id
+
+    @hgetall id, ( err, details ) =>
       return cb err, null if err
       return cb null, null unless details and _.size details
+
+      if @constructor.returns?
+        return cb null, new @constructor.returns @app, id, details
+
       return cb null, details
 
   multi: ( args ) ->
-    return new RedisMulti( @ns, @application.redisClient, args )
+    return new RedisMulti( @ns, @app.redisClient, args )
 
   getKey: ( parts ) ->
     key = [ @ns ]
     key = key.concat parts
 
     return key.join ":"
-
-  # Clear the keys associated with this model (taking into account the
-  # namespace). It's for tests, not for use in production code.
-  flush: ( cb ) ->
-    multi = @application.redisClient.multi()
-
-    # loop over all of the keys deleting them one by one :/
-    @keys [ "*" ], ( err, keys ) ->
-      return cb err if err
-
-      for key in keys
-        multi.del key, ( err, res ) ->
-          return cb err if err
-
-      multi.exec cb
 
   minuteString: ( date=new Date() ) =>
     return "#{ @hourString date }:#{ date.getMinutes() }"
@@ -105,6 +115,10 @@ class RedisMulti extends redis.Multi
 
   getKey: Redis::getKey
 
+class Model extends Redis
+  constructor: ( @app, @id, @data ) ->
+    super @app
+
 # adding a command here will make it usable in Redis and RedisMulti
 redisCommands = {
   "hset": "write"
@@ -127,6 +141,7 @@ redisCommands = {
   "scard": "read"
   "linsert": "write"
   "lrange": "read"
+  "lrem": "write"
   "rpush": "write"
   "lpush": "write"
 }
@@ -150,6 +165,7 @@ for command, access of redisCommands
       full_key = @getKey( key )
 
       @ee.emit access, command, key, full_key
-      @application.redisClient[ command ]( full_key, args... )
+      @app.redisClient[ command ]( full_key, args... )
 
 exports.Redis = Redis
+exports.Model = Model
