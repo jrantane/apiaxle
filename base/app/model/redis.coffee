@@ -21,6 +21,9 @@ class Redis
     catch err
       return cb err, null
 
+  callConstructor: ( id, details, cb ) ->
+    return @constructor.__super__.create.apply @, [ id, details, cb ]
+
   create: ( id, details, cb ) ->
     @validate details, ( err, instance ) =>
       return cb err if err
@@ -119,7 +122,9 @@ class Model extends Redis
   constructor: ( @app, @id, @data ) ->
     super @app
 
-# adding a command here will make it usable in Redis and RedisMulti
+# adding a command here will make it usable in Redis and
+# RedisMulti. The reason for the read/write attribute is so that when
+# the emitter does its thing you can watch reads/writes/both
 redisCommands = {
   "hset": "write"
   "hget": "read"
@@ -127,7 +132,8 @@ redisCommands = {
   "hincrby": "write"
   "hgetall": "read"
   "hexists": "read"
-  "expire": "read"
+  "exists": "read"
+  "expire": "write"
   "set": "write"
   "get": "read"
   "incr": "write"
@@ -137,13 +143,19 @@ redisCommands = {
   "ttl": "write"
   "setex": "write"
   "sadd": "write"
+  "hkeys": "read"
   "smembers": "read"
-  "scard": "read"
+  "scard":   "read"
   "linsert": "write"
-  "lrange": "read"
-  "lrem": "write"
-  "rpush": "write"
-  "lpush": "write"
+  "lrange":  "read"
+  "lrem":    "write"
+  "rpush":   "write"
+  "lpush":   "write"
+  "zadd":    "write"
+  "zrem":    "write"
+  "zincrby": "write"
+  "zcard":   "read"
+  "zrangebyscore": "read"
 }
 
 # build up the redis multi commands
