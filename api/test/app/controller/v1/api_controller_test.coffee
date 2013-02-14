@@ -13,7 +13,7 @@ class exports.ApiControllerTest extends ApiaxleTest
       @isNull err
       res.parseJson ( err, json ) =>
         @isNull err
-        @ok 1
+        @ok json
 
         done 3
 
@@ -24,11 +24,13 @@ class exports.ApiControllerTest extends ApiaxleTest
         facebook: {}
       key:
         1234:
-          forApi: "twitter"
+          forApis: [ "twitter" ]
         5678:
-          forApi: "twitter"
+          forApis: [ "twitter" ]
         9876:
-          forApi: "facebook"
+          forApis: [ "facebook" ]
+        hello:
+          forApis: [ "facebook", "twitter" ]
 
     @fixtures.create fixture, ( err ) =>
       @isNull err
@@ -43,7 +45,7 @@ class exports.ApiControllerTest extends ApiaxleTest
           @isNull err
 
           res.parseJson ( err, json ) =>
-            @deepEqual json.results, [ "5678", "1234" ]
+            @deepEqual json.results, [ "hello", "5678", "1234" ]
             cb()
 
       # with resolution
@@ -52,13 +54,16 @@ class exports.ApiControllerTest extends ApiaxleTest
           @isNull err
 
           res.parseJson ( err, json ) =>
-            @equal json.results["1234"].forApi, "twitter"
+            @equal json.results[ "1234" ].qpd, 172800
+            @equal json.results[ "5678" ].qpd, 172800
+            @equal json.results[ "hello" ].qpd, 172800
+
             cb()
 
       async.series all_tests, ( err ) =>
         @isNull err
 
-        done 6
+        done 8
 
   "test GET a non-existant api": ( done ) ->
     # now try and get it
@@ -373,6 +378,59 @@ class exports.ApiStatsTest extends ApiaxleTest
         1234: {}
 
     @fixtures.create fixtures, done
+
+  "test GET hits for API": ( done ) ->
+    model = @app.model "hits"
+    hits  = []
+    # Wed, December 14th 2011, 20:01
+    clock = @getClock 1323892867000
+    hits.push ( cb ) => model.hit "facebook", "1234", 200, cb
+    hits.push ( cb ) => model.hit "facebook", "1234", 400, cb
+    hits.push ( cb ) => model.hit "facebook", "1234", 400, cb
+
+    shouldHave =
+      meta:
+        version: 1
+        status_code: 200
+      results:
+        "1323892867": "3"
+
+    async.parallel hits, ( err, results ) =>
+      @isNull err
+      @GET path: "/v1/api/facebook/hits", ( err, res ) =>
+        @isNull err
+
+        res.parseJson ( err, json ) =>
+          @isNull err
+          @ok json
+          @deepEqual json, shouldHave
+          done 5
+
+  "test GET real time hits for API": ( done ) ->
+    model = @app.model "hits"
+    hits  = []
+    # Wed, December 14th 2011, 20:01
+    clock = @getClock 1323892867000
+    hits.push ( cb ) => model.hit "facebook", "1234", 200, cb
+    hits.push ( cb ) => model.hit "facebook", "1234", 400, cb
+    hits.push ( cb ) => model.hit "facebook", "1234", 400, cb
+
+    shouldHave =
+      meta:
+        version: 1
+        status_code: 200
+      results: 3
+
+    async.parallel hits, ( err, results ) =>
+      @isNull err
+      @GET path: "/v1/api/facebook/hits/now", ( err, res ) =>
+        @isNull err
+
+        res.parseJson ( err, json ) =>
+          @isNull err
+          @ok json
+          @deepEqual json, shouldHave
+          done 5
 
   "test GET all counts with range": ( done ) ->
     model = @app.model "counters"

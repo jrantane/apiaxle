@@ -32,6 +32,9 @@ class Redis
       multi.lrem "meta:all", 0, id
       multi.exec cb
 
+  callConstructor: ( id, details, cb ) ->
+    return @constructor.__super__.create.apply @, [ id, details, cb ]
+
   create: ( id, details, cb ) ->
     @validate details, ( err, instance ) =>
       return cb err if err
@@ -140,7 +143,8 @@ redisCommands = {
   "hincrby": "write"
   "hgetall": "read"
   "hexists": "read"
-  "expire": "read"
+  "exists": "read"
+  "expire": "write"
   "set": "write"
   "get": "read"
   "incr": "write"
@@ -150,13 +154,19 @@ redisCommands = {
   "ttl": "write"
   "setex": "write"
   "sadd": "write"
+  "hkeys": "read"
   "smembers": "read"
-  "scard": "read"
+  "scard":   "read"
   "linsert": "write"
-  "lrange": "read"
-  "lrem": "write"
-  "rpush": "write"
-  "lpush": "write"
+  "lrange":  "read"
+  "lrem":    "write"
+  "rpush":   "write"
+  "lpush":   "write"
+  "zadd":    "write"
+  "zrem":    "write"
+  "zincrby": "write"
+  "zcard":   "read"
+  "zrangebyscore": "read"
 }
 
 # build up the redis multi commands
