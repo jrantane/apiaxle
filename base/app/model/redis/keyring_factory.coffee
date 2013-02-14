@@ -12,7 +12,7 @@ class Keyring extends Model
 
       if not key
         return cb new ValidationError "Key '#{ key_name }' not found."
-    
+
       @lrem "#{ @id }:keys", 0, key_name, ( err ) ->
         return cb err if err
 
