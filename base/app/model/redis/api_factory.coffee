@@ -4,7 +4,7 @@
 validationEnv = require( "schema" )( "apiEnv" )
 
 class Api extends Model
-  addKey: ( key, cb ) ->
+  addKey: ( key, cb ) =>
     @app.model( "keyFactory" ).find key, ( err, dbKey ) =>
       return cb err if err
 
@@ -16,8 +16,9 @@ class Api extends Model
 
         multi = @multi()
 
-        # add to the list of all keys
-        multi.lpush "#{ @id }:keys", key
+        # add to the list of all keys if it's not already there
+        @hexists "#{ @id }:keys-lookup", key, ( err, exists ) ->
+          multi.lpush "#{ @id }:keys", key if not exists
 
         # and add to a quick lookup for the keys
         multi.hset "#{ @id }:keys-lookup", key, 1
