@@ -1,7 +1,7 @@
 title: API Axle
 safe: true
 twitter: "https://twitter.com/#!/apiaxle"
-email: "phil@shellarchive.co.uk"
+email: "phil@apiaxle.com"
 exclude: "node_modules"
 permalink: "/docs/:title"
 description: "A slimmed-down mashery alternative. A proxy for your api, statistics for your api & a powerful api of its own."
