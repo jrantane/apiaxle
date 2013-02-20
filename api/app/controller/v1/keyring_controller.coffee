@@ -26,7 +26,7 @@ class exports.CreateKeyring extends ApiaxleController
   execute: ( req, res, next ) ->
     # error if it exists
     if req.keyring?
-      return next new AlreadyExists "#{ keyring } already exists."
+      return next new AlreadyExists "'#{ req.keyring.id }' already exists."
 
     model = @app.model "keyringFactory"
     model.create req.params.keyring, req.body, ( err, newObj ) =>
@@ -107,15 +107,11 @@ class exports.ModifyKeyring extends ApiaxleController
     # modify the old keyring struct
     newData = _.extend req.keyring.data, req.body
 
-    # validate it
-    model.validate newData, ( err, instance ) =>
+    # re-apply it to the db
+    model.create req.param.keyring, newData, ( err, newKeyring ) =>
       return next err if err
 
-      # re-apply it to the db
-      model.create req.params.keyring, instance, ( err, newKeyring ) =>
-        return next err if err
-
-        @json res, newKeyring.data
+      @json res, newKeyring.data
 
 class exports.ListKeyrings extends ListController
   @verb = "get"
@@ -177,48 +173,59 @@ class exports.ListKeyringKeys extends ListController
 
   middleware: -> [ @mwKeyringDetails( @app ) ]
 
-class exports.AddKeyringKey extends ApiaxleController
-  @verb = "post"
+class exports.UnlinkKeyToKeyring extends ApiaxleController
+  @verb = "put"
 
-  path: -> "/v1/keyring/:keyring/key/:key"
+  desc: ->
+    """
+    Disassociate a key with a KEYRING.
 
-  desc: -> "Add existing KEY to existing KEYRING."
+    The key will still exist and its details won't be affected.
+    """
 
   docs: ->
     """
     ### Returns
 
-    * `true` if the operation is successful.
+    * The unlinked key details.
     """
 
   middleware: -> [ @mwKeyringDetails( valid_keyring_required=true ),
                    @mwKeyDetails( valid_key_required=true ) ]
 
+  path: -> "/v1/keyring/:keyring/unlinkkey/:key"
+
   execute: ( req, res, next ) ->
-    req.keyring.addKey req.key.id, ( err ) =>
+    req.keyring.unlinkKey req.key.id, ( err ) =>
       return next err if err
 
-      @json res, true
+      @json res, req.key.data
 
-class exports.DelKeyringKey extends ApiaxleController
-  @verb = "post"
+class exports.LinkKeyToKeyring extends ApiaxleController
+  @verb = "put"
 
-  path: -> "/v1/keyring/:keyring/key/:key"
+  desc: ->
+    """
+    Associate a key with a KEYRING.
 
-  desc: -> "Delete and existing KEY from an existing KEYRING."
+    The key must already exist and will not be modified by this
+    operation.
+    """
 
   docs: ->
     """
     ### Returns
 
-    * `true` if the operation is successful.
+    * The linked key details.
     """
 
   middleware: -> [ @mwKeyringDetails( valid_keyring_required=true ),
                    @mwKeyDetails( valid_key_required=true ) ]
 
+  path: -> "/v1/keyring/:keyring/linkkey/:key"
+
   execute: ( req, res, next ) ->
-    req.keyring.delKey req.key.id, ( err ) =>
+    req.keyring.linkKey req.key.id, ( err ) =>
       return next err if err
 
-      @json res, true
+      @json res, req.key.data
