@@ -40,11 +40,11 @@ class exports.Command extends Module
   @include httpHelpers
 
   exec: ( [ id, command, rest... ], keypairs, cb ) ->
-    if not command?
-      return @show id, rest, keypairs, cb
+    return cb null, @constructor.help cb if not id or id is ""
+    return @show id, rest, keypairs, cb if not command?
+    return @[ command ] id, rest, keypairs, cb if ( command of @ )
 
-    if ( command of @ )
-      return @[ command ] id, rest, keypairs, cb
+    return cb new Error "Invalid syntax. Try 'help'."
 
   callApi: ( verb, options, cb ) =>
     default_options =
@@ -52,6 +52,12 @@ class exports.Command extends Module
         "content-type": "application/json"
 
     options = _.extend options, default_options
+
+    log = "Calling (#{ verb }) '#{ options.path }'"
+    if options.data
+      log += " with '#{ options.data }' as the body."
+
+    @app.logger.info log
 
     @[ verb ] options, ( err, res ) =>
       return cb err if err

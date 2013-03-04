@@ -1,17 +1,14 @@
 # extends Date
 require "date-utils"
 
-_ = require "underscore"
-
+_            = require "underscore"
+log4js       = require "log4js"
 express      = require "express"
 walkTreeSync = require "./walktree"
 fs           = require "fs"
 redis        = require "redis"
 
-{ Js2Xml }        = require "js2xml"
-{ StreamLogger  } = require "../vendor/streamlogger"
-{ StdoutLogger  } = require "./stderrlogger"
-
+{ Js2Xml }                    = require "js2xml"
 { RedisError, NotFoundError } = require "./error"
 
 class exports.Application
@@ -61,7 +58,7 @@ class exports.Application
           # this is used by the documentation generator
           @controllers[ cls ] = ctrlr
 
-          @logger.info "Loading controller #{ cls } with path '#{ ctrlr.path() }'"
+          @logger.debug "Loading controller #{ cls } with path '#{ ctrlr.path() }'"
       catch e
         throw new Error( "Failed to load controller #{abs}: #{e}" )
 
@@ -84,7 +81,7 @@ class exports.Application
         modelName = model.charAt( 0 ).toLowerCase() + model.slice( 1 )
 
         if func.instantiateOnStartup
-          @logger.info "Loading model '#{model}'"
+          @logger.debug "Loading model '#{model}'"
 
           # models take an instance of this class as an argument to the
           # constructor. This gives us something like
@@ -133,15 +130,20 @@ class exports.Application
         host: "localhost"
         port: 6379
       app:
-        debug: true
+        debug: false
       logging:
-        path: "./log"
-        filename: "#{ Application.env }-#{ @port }.log"
+        level: "INFO"
+        appenders: [
+          {
+            type: "file",
+            filename: "#{ Application.env }-#{ @port }.log"
+          }
+        ]
 
     # load up /our/ configuration (from the files in /config)
     [ config_filename, @config ] = require( "./app_config" )( Application.env )
 
-    @config = _.extend @config, default_config
+    @config = _.extend default_config, @config
 
     app.configure ( ) =>
       @configureGeneral app
@@ -160,15 +162,10 @@ class exports.Application
 
   configureLogging: ( app ) ->
     logging_config = @config.logging
+    log4js.configure logging_config
 
-    if logging_config.path?
-      unless fs.existsSync logging_config.path
-        fs.mkdirSync logging_config.path
-
-    @logger = if logging_config.filename is "-"
-      new StdoutLogger
-    else
-      new StreamLogger "#{ @config.logging.path }/#{ @config.logging.filename }"
+    @logger = log4js.getLogger()
+    @logger.setLevel logging_config.level
 
   onError: ( err, req, res, next ) ->
     output =
@@ -176,9 +173,7 @@ class exports.Application
         type: err.constructor.name
         message: err.message
 
-    if @debug
-      output.error.details = err.details if err.details
-      output.error.stack = err.stack
+    output.error.details = err.details if err.details
 
     # json
     if req.api?.data.apiFormat isnt "xml"
