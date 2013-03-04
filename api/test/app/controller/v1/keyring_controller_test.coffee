@@ -33,27 +33,28 @@ class exports.KeyringControllerTest extends ApiaxleTest
           done 3
 
   "test GET keys for a valid keyring": ( done ) ->
-    @fixtures.createApi "twitter", ( err ) =>
-      @fixtures.createKeyring "blah", ( err, keyring ) =>
-        new_keys = []
+    fixtures =
+      api:
+        twitter: {}
+      key:
+        1: {}
+        2: {}
+        3: {}
+        4: {}
+        5: {}
+      keyring:
+        blah: {}
 
-        # create a bunch of keys
-        for i in [ 1..15 ]
-          new_keys.push ( cb ) =>
-            @fixtures.createKey ( err, key ) =>
-              keyring.addKey key.id, cb
+    @fixtures.create fixtures, ( err ) =>
+      @isNull err
 
-        async.series new_keys, ( err, keys ) =>
+      @GET path: "/v1/keyring/blah/keys?from=0&to=9", ( err, res ) =>
+        @isNull err
+        res.parseJson ( err, json ) =>
           @isNull err
+          @equal json.results.length, 5
 
-          @GET path: "/v1/keyring/blah/keys?from=0&to=9", ( err, res ) =>
-            @isNull err
-            res.parseJson ( err, json ) =>
-              @isNull err
-              @equal json.results.length, 10
-              @deepEqual json.results, _.pluck( keys[ 0..9 ], "id")
-
-              done 5
+          done 4
 
   "test GET a non-existant keyring": ( done ) ->
     # now try and get it
@@ -68,7 +69,7 @@ class exports.KeyringControllerTest extends ApiaxleTest
 
         done 5
 
-  "test POSTing a valid key to an invalid keyring": ( done ) ->
+  "test PUTing a valid key to an invalid keyring": ( done ) ->
     fixture =
       api:
         twitter: {}
@@ -78,7 +79,7 @@ class exports.KeyringControllerTest extends ApiaxleTest
     @fixtures.create fixture, ( err ) =>
       @isNull err
 
-      @POST path: "/v1/keyring/ring1/key/1234", ( err, res ) =>
+      @PUT path: "/v1/keyring/ring1/linkkey/1234", ( err, res ) =>
         @isNull err
 
         res.parseJson ( err, json ) =>
@@ -89,7 +90,7 @@ class exports.KeyringControllerTest extends ApiaxleTest
 
           done 6
 
-  "test POSTing an invalid key to a valid keyring": ( done ) ->
+  "test PUTing an invalid key to a valid keyring": ( done ) ->
     fixture =
       keyring:
         ring1: {}
@@ -97,7 +98,7 @@ class exports.KeyringControllerTest extends ApiaxleTest
     @fixtures.create fixture, ( err ) =>
       @isNull err
 
-      @POST path: "/v1/keyring/ring1/key/1234", ( err, res ) =>
+      @PUT path: "/v1/keyring/ring1/linkkey/1234", ( err, res ) =>
         @isNull err
 
         res.parseJson ( err, json ) =>
@@ -108,7 +109,7 @@ class exports.KeyringControllerTest extends ApiaxleTest
 
           done 6
 
-  "test POSTing a valid key to a valid keyring": ( done ) ->
+  "test PUTing a valid key to a valid keyring": ( done ) ->
     fixture =
       api:
         twitter: {}
@@ -130,11 +131,11 @@ class exports.KeyringControllerTest extends ApiaxleTest
 
         add_key_functions = []
         add_key_functions.push ( cb ) =>
-          @POST path: "/v1/keyring/ring1/key/1234", ( err, res ) =>
+          @PUT path: "/v1/keyring/ring1/linkkey/1234", ( err, res ) =>
             @isNull err
             res.parseJson ( err, json ) =>
               @isNull err
-              @equal json.results, true
+              @equal json.results.qps, 2
 
               # get all of the keys, check there's just one
               keyring.getKeys 0, 100, ( err, keys ) =>
@@ -143,11 +144,11 @@ class exports.KeyringControllerTest extends ApiaxleTest
                 cb()
 
         add_key_functions.push ( cb ) =>
-          @POST path: "/v1/keyring/ring1/key/5678", ( err, res ) =>
+          @PUT path: "/v1/keyring/ring1/linkkey/5678", ( err, res ) =>
             @isNull err
             res.parseJson ( err, json ) =>
               @isNull err
-              @equal json.results, true
+              @equal json.results.qps, 2
 
               # get all of the keys, check there's just one
               keyring.getKeys 0, 100, ( err, keys ) =>
@@ -159,29 +160,3 @@ class exports.KeyringControllerTest extends ApiaxleTest
           @isNull err
 
           done 13
-
-  "test DELETE-ing keys from a keyring": ( done ) ->
-    fixture =
-      api:
-        twitter: {}
-      keyring:
-        ring2: {}
-      key:
-        1234: {}
-        5678: {}
-        9876: {}
-
-    @fixtures.create fixture, ( err, [ api, keyring, keys... ] ) =>
-      @isNull err
-
-      keyring.addKeys _.pluck( keys, "id" ), ( err ) =>
-        @isNull err
-
-        keyring.delKey keys[0].id, ( err ) =>
-          @isNull err
-
-          keyring.getKeys 0, 100, ( err, dbKeys ) =>
-            @isNull err
-            @deepEqual dbKeys.reverse(), _.pluck( keys[1..2], "id" )
-
-            done 5

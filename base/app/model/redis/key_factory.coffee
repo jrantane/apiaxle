@@ -4,25 +4,30 @@ async = require "async"
 { Redis, Model } = require "../redis"
 { ValidationError } = require "../../../lib/error"
 
-validationEnv = require( "schema" )( "keyEnv" )
-
 class Key extends Model
-  # associate this key with that api
-  linkToApi: ( apiName, cb ) ->
-    @hset "#{ @id }-apis", apiName, 1, cb
+  linkToApi: ( apiName, cb ) -> @hset "#{ @id }-apis", apiName, 1, cb
+  supportedApis: ( cb ) -> @hkeys "#{ @id }-apis", cb
+  unlinkFromApi: ( apiName, cb ) -> @hdel "#{ @id }-apis", apiName, cb
 
-  supportedApis: ( cb ) ->
-    @hkeys "#{ @id }-apis", cb
+  linkToKeyring: ( krName, cb ) -> @hset "#{ @id }-keyrings", krName, 1, cb
+  supportedKeyrings: ( cb ) -> @hkeys "#{ @id }-keyrings", cb
+  unlinkFromKeyring: ( krName, cb ) -> @hdel "#{ @id }-keyrings", krName, cb
 
 class exports.KeyFactory extends Redis
   @instantiateOnStartup = true
   @smallKeyName = "key"
   @returns      = Key
 
-  @structure = validationEnv.Schema.create
+  @structure =
     type: "object"
     additionalProperties: false
     properties:
+      createdAt:
+        type: "integer"
+        optional: true
+      updatedAt:
+        type: "integer"
+        optional: true
       sharedSecret:
         type: "string"
         optional: true
@@ -62,7 +67,7 @@ class exports.KeyFactory extends Redis
     for api in dbApis
       do( api ) ->
         allKeysLink.push ( cb ) ->
-          api.addKey dbKey.id, ( err ) ->
+          api.linkKey dbKey.id, ( err ) ->
             return cb err if err
             return cb null, dbKey
 

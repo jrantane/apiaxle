@@ -1,23 +1,20 @@
 # extends Date
 require "date-utils"
 
-_ = require "underscore"
-
+_            = require "underscore"
+log4js       = require "log4js"
 express      = require "express"
 walkTreeSync = require "./walktree"
 fs           = require "fs"
 redis        = require "redis"
 
-{ Js2Xml }        = require "js2xml"
-{ StreamLogger  } = require "../vendor/streamlogger"
-{ StdoutLogger  } = require "./stderrlogger"
-
+{ Js2Xml }                    = require "js2xml"
 { RedisError, NotFoundError } = require "./error"
 
 class exports.Application
   @env = ( process.env.NODE_ENV or "development" )
 
-  constructor: ( ) ->
+  constructor: ( @binding_host, @port ) ->
     app = module.exports = express.createServer()
 
     @_configure app
@@ -40,8 +37,8 @@ class exports.Application
       throw err if err
       cb ( ) => @redisClient.quit()
 
-  run: ( binding_host, port, callback ) ->
-    @app.listen port, binding_host, callback
+  run: ( callback ) ->
+    @app.listen @port, @binding_host, callback
 
   configureMiddleware: ( ) ->
     return @
@@ -61,7 +58,7 @@ class exports.Application
           # this is used by the documentation generator
           @controllers[ cls ] = ctrlr
 
-          @logger.info "Loading controller #{ cls } with path '#{ ctrlr.path() }'"
+          @logger.debug "Loading controller #{ cls } with path '#{ ctrlr.path() }'"
       catch e
         throw new Error( "Failed to load controller #{abs}: #{e}" )
 
@@ -84,7 +81,7 @@ class exports.Application
         modelName = model.charAt( 0 ).toLowerCase() + model.slice( 1 )
 
         if func.instantiateOnStartup
-          @logger.info "Loading model '#{model}'"
+          @logger.debug "Loading model '#{model}'"
 
           # models take an instance of this class as an argument to the
           # constructor. This gives us something like
@@ -128,16 +125,30 @@ class exports.Application
     return list
 
   _configure: ( app ) ->
+    default_config =
+      redis:
+        host: "localhost"
+        port: 6379
+      app:
+        debug: false
+      logging:
+        level: "INFO"
+        appenders: [
+          {
+            type: "file",
+            filename: "#{ Application.env }-#{ @port }.log"
+          }
+        ]
+
     # load up /our/ configuration (from the files in /config)
     [ config_filename, @config ] = require( "./app_config" )( Application.env )
+    @config = _.extend default_config, @config
 
     app.configure ( ) =>
       @configureGeneral app
+      @configureLogging app
 
-      app.configure "test",        ( ) => @_configureForTest app
-      app.configure "staging",     ( ) => @_configureForStaging app
-      app.configure "development", ( ) => @_configureForDevelopment app
-      app.configure "production",  ( ) => @_configureForProduction app
+      @logger.info "Loading configuration from '#{ config_filename }'."
 
       @logger.info "Loading configuration from '#{ config_filename }'."
 
@@ -150,24 +161,12 @@ class exports.Application
     # offload any errors to onError
     app.error ( args... ) => @onError.apply @, args
 
-  _configureForTest: ( app ) ->
-    @logger = new StreamLogger "log/test.log"
-    @logger.level = @logger.levels.debug
-    @debug = true
+  configureLogging: ( app ) ->
+    logging_config = @config.logging
+    log4js.configure logging_config
 
-  _configureForStaging: ( app ) ->
-    @logger = new StreamLogger "log/staging-#{port}.log"
-    @logger.level = @logger.levels.debug
-    @debug = true
-
-  _configureForDevelopment: ( app ) ->
-    @logger = new StdoutLogger
-    @debug = true
-
-  _configureForProduction: ( app ) ->
-    @logger = new StreamLogger "log/production-#{port}.log"
-    @logger.level = @logger.levels.info
-    @debug = false
+    @logger = log4js.getLogger()
+    @logger.setLevel logging_config.level
 
   onError: ( err, req, res, next ) ->
     output =
@@ -175,9 +174,7 @@ class exports.Application
         type: err.constructor.name
         message: err.message
 
-    if @debug
-      output.error.details = err.details if err.details
-      output.error.stack = err.stack
+    output.error.details = err.details if err.details
 
     # json
     if req.api?.data.apiFormat isnt "xml"

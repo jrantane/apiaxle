@@ -7,6 +7,45 @@ class exports.ApiControllerTest extends ApiaxleTest
   @start_webserver = true
   @empty_db_on_setup = true
 
+  "test linkkey with invalid api": ( done ) ->
+    @PUT path: "/v1/api/bob/linkkey/bill", ( err, res ) =>
+      @isNull err
+
+      res.parseJson ( err, json ) =>
+        @isNull err
+        @equal json.results.error.message, "Api 'bob' not found."
+
+        done 3
+
+  "test linkkey": ( done ) ->
+    fixture =
+      api:
+        bob: {}
+        twitter: {}
+      key:
+        bill:
+          qps: 201
+
+    @fixtures.create fixture, ( err, [ dbBob ] ) =>
+      @isNull err
+
+      dbBob.getKeys 0, 20, ( err, keys ) =>
+        @isNull err
+        @deepEqual keys, []
+
+        @PUT path: "/v1/api/bob/linkkey/bill", ( err, res ) =>
+          @isNull err
+
+          res.parseJson ( err, json ) =>
+            @isNull err
+            @equal json.results.qps, 201
+
+            dbBob.getKeys 0, 20, ( err, keys ) =>
+              @isNull err
+              @deepEqual keys, [ "bill" ]
+
+              done 8
+
   "test GET a valid api": ( done ) ->
     # now try and get it
     @GET path: "/v1/api/1234", ( err, res ) =>
@@ -212,9 +251,7 @@ class exports.ApiControllerTest extends ApiaxleTest
         @isNull err
         @ok json.results.error
         @equal json.results.error.type, "ValidationError"
-
-        # TODO: this is a terrible message...
-        @equal json.results.error.message, "endPoint: (optional) "
+        @equal json.results.error.message, "endPoint: The ‘endPoint’ property is required."
 
         done 6
 
@@ -225,7 +262,6 @@ class exports.ApiControllerTest extends ApiaxleTest
         "Content-Type": "application/json"
       data: JSON.stringify
         apiFormat: "xml"
-        doesntExist: 1
 
     @fixtures.createApi "1234", endPoint: "hi.com", ( err, origApi ) =>
       @isNull err
@@ -239,10 +275,7 @@ class exports.ApiControllerTest extends ApiaxleTest
           @equal dbApi.data.endPoint, "hi.com"
           @equal dbApi.data.apiFormat, "xml"
 
-          # we shouldn't have added the superfluous field
-          @equal dbApi.data.doesntExist?, false
-
-          done 7
+          done 6
 
   "test PUT with a bad structure": ( done ) ->
     @fixtures.createApi "1234", endPoint: "hi.com", ( err, origApi ) =>

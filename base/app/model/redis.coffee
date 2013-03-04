@@ -5,6 +5,7 @@ events = require "events"
 
 redis = require "redis"
 
+{ KeyNotFoundError } = require "../../lib/error"
 class Redis
   constructor: ( @app ) ->
     env =  @app.constructor.env
@@ -16,10 +17,21 @@ class Redis
     @ns = "#{ @base_key }:#{ name }"
 
   validate: ( details, cb ) ->
-    try
-      return validate @constructor.structure, details, cb
-    catch err
-      return cb err, null
+    return validate @constructor.structure, details, ( err ) ->
+      return cb err, details
+
+  callConstructor: ( id, details, cb ) ->
+    return @constructor.__super__.create.apply @, [ id, details, cb ]
+
+  update: ( id, details, cb ) ->
+    @find id, ( err, dbObj ) ->
+      if not dbObj
+        return cb new Error "Failed to update, can't find '#{ id }'."
+
+      # merge the new and old details
+      merged_data = _.extend dbObj.data, details
+
+      @create id, merged_data, cb
 
   delete: ( id, cb ) ->
     @find id, ( err, dbObj ) =>
@@ -31,9 +43,6 @@ class Redis
       multi.del id
       multi.lrem "meta:all", 0, id
       multi.exec cb
-
-  callConstructor: ( id, details, cb ) ->
-    return @constructor.__super__.create.apply @, [ id, details, cb ]
 
   create: ( id, details, cb ) ->
     @find id, ( err, dbObj ) =>
@@ -93,6 +102,15 @@ class Redis
     @hgetall id, ( err, details ) =>
       return cb err, null if err
       return cb null, null unless details and _.size details
+      for key, val of details
+        continue if not val?
+
+        # find out what type we expect
+        suggested_type = @constructor.structure.properties[ key ]?.type
+
+        # convert int if need be
+        if suggested_type and suggested_type is "integer"
+          details[ key ] = parseInt( val )
 
       if @constructor.returns?
         return cb null, new @constructor.returns @app, id, details
@@ -125,6 +143,7 @@ class Redis
 
   getValidationDocs: ( ) ->
     strings = for field, details of @constructor.structure.properties
+      continue unless details.docs?
       out = "* #{field}: "
 
       out += "(default: #{ details.default }) " if details.default
@@ -144,12 +163,75 @@ class Model extends Redis
   constructor: ( @app, @id, @data ) ->
     super @app
 
+# Used to extend something that can 'hold' keys (like an API or a
+# keyring).
+class KeyContainerModel extends Model
+  linkKey: ( key, cb ) =>
+    @app.model( "keyFactory" ).find key, ( err, dbObj ) =>
+      return cb err if err
+
+      if not dbObj
+        return cb new KeyNotFoundError "#{ key } doesn't exist."
+
+      dbObj[ @constructor.reverseLinkFunction ] @id, ( err ) =>
+        return cb err if err
+
+        # add to the list of all keys if it's not already there
+        @supportsKey key, ( err, is_already_added ) =>
+          return cb err if err
+
+          multi = @multi()
+
+          # the list (if need be)
+          if not is_already_added
+            multi.lpush "#{ @id }:keys", key
+
+          # and add to a quick lookup for the keys
+          multi.hset "#{ @id }:keys-lookup", key, 1
+
+          multi.exec ( err ) ->
+            return cb err if err
+            return cb null, dbObj
+
+  unlinkKey: ( keyName, cb ) ->
+    @app.model( "keyFactory" ).find keyName, ( err, dbObj ) =>
+      return cb err if err
+
+      if not dbObj
+        return cb new KeyNotFoundError "#{ keyName } doesn't exist."
+
+      dbObj[ @constructor.reverseUnlinkFunction ] keyName, ( err ) =>
+        return cb err if err
+
+        multi = @multi()
+
+        # hopefully only one
+        multi.lrem "#{ @id }:keys", 1, keyName
+        multi.hdel "#{ @id }:keys-lookup", keyName
+
+        multi.exec ( err ) ->
+          return cb err if err
+          return cb null, dbObj
+
+  getKeys: ( start, stop, cb ) ->
+    @lrange "#{ @id }:keys", start, stop, cb
+
+  supportsKey: ( key, cb ) ->
+    @hexists "#{ @id }:keys-lookup", key, ( err, exists ) ->
+      return cb err if err
+
+      if exists is 0
+        return cb null, false
+
+      return cb null, true
+
 # adding a command here will make it usable in Redis and
 # RedisMulti. The reason for the read/write attribute is so that when
 # the emitter does its thing you can watch reads/writes/both
 redisCommands = {
   "hset": "write"
   "hget": "read"
+  "hdel": "write"
   "hmset": "write"
   "hincrby": "write"
   "hgetall": "read"
@@ -203,3 +285,4 @@ for command, access of redisCommands
 
 exports.Redis = Redis
 exports.Model = Model
+exports.KeyContainerModel = KeyContainerModel
