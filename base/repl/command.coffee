@@ -68,6 +68,7 @@ class exports.ModelCommand extends exports.Command
 
       @model().find id, ( err, dbApi ) =>
         return cb err if err
+        return cb new Error "'#{id}' doesn't exist." if not dbApi
         return cb null, dbApi.data
 
   delete: ( commands, cb ) ->

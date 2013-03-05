@@ -42,6 +42,18 @@ class exports.ApiCommandTest extends FakeAppTest
 
       done 3
 
+  "test finding a non-existant api works": ( done ) ->
+    commands = [
+      "api",
+      "find",
+      "facebook" ]
+
+    @repl.runCommands commands, ( err, info ) =>
+      @ok err
+      @equal err.message, "'facebook' doesn't exist."
+
+      done 2
+
   "test updating an API": ( done ) ->
     fixture =
       api:
