@@ -51,7 +51,7 @@ class exports.ApiCommandTest extends FakeAppTest
       "api",
       "update",
       "facebook",
-      { endPoint: "graph", protocol: "https" } ]
+      { protocol: "https" } ]
 
     @fixtures.create fixture, ( err ) =>
       @isNull err
