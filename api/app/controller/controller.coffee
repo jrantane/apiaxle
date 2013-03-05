@@ -30,7 +30,7 @@ class exports.ApiaxleController extends Controller
     # hash
     multi = model.multi()
     for result in keys
-      multi.hgetall result 
+      multi.hgetall result
 
     final = {}
 
