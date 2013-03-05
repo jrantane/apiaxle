@@ -1,40 +1,27 @@
-{ Command } = require "../command"
+_ = require "underscore"
+{ ModelCommand } = require "../command"
 
-class exports.Api extends Command
+class exports.Api extends ModelCommand
   @modelName = "apiFactory"
 
-  unlinkkey: ( id, commands, keypairs, cb ) ->
-    if not key = commands.shift()
-      return cb new Error "Please provide a key name to link to #{ id }."
+  addKey: ( commands, cb ) ->
+    @_getIdAndObject commands, ( err, dbApi ) =>
+      dbApi.addKey commands.shift(), cb
 
-    options =
-      path: "/v1/api/#{ id }/unlinkkey/#{ key }"
-    @callApi "PUT", options, cb
+  getKeys: ( commands, cb ) ->
+    @_getIdAndObject commands, ( err, dbApi ) =>
+      [ from, to ] = commands
 
-  linkkey: ( id, commands, keypairs, cb ) ->
-    if not key = commands.shift()
-      return cb new Error "Please provide a key name to link to #{ id }."
+      from or= 0
+      to or= 1000
 
-    options =
-      path: "/v1/api/#{ id }/linkkey/#{ key }"
-    @callApi "PUT", options, cb
+      dbApi.getKeys from, to, cb
 
-  delete: ( id, commands, keypairs, cb ) ->
-    options =
-      path: "/v1/api/#{ id }"
-    @callApi "DELETE", options, cb
+  help: ( commands, cb ) ->
+    help = "api [find|update|delete] <api_id>\n\n"
+    help += "api addKey <api_id> <key_id>\n\n"
+    help += "api getKeys <api_id> <from> <to>\n\n"
+    help += "api create <api_id> endPoint=<endpoint>:\nFields supported:\n"
+    help += @model().getValidationDocs()
 
-  update: ( id, commands, keypairs, cb ) ->
-    options =
-      path: "/v1/api/#{ id }"
-      data: JSON.stringify( keypairs )
-    @callApi "PUT", options, cb
-
-  create: ( id, commands, keypairs, cb ) ->
-    options =
-      path: "/v1/api/#{ id }"
-      data: JSON.stringify( keypairs )
-    @callApi "POST", options, cb
-
-  show: ( id, commands, keypairs, cb ) ->
-    @callApi "GET", path: "/v1/api/#{ id }", cb
+    return cb null, help

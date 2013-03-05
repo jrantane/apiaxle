@@ -6,6 +6,7 @@ redis = require "redis"
 
 { KeyNotFoundError } = require "../../lib/error"
 
+{ KeyNotFoundError } = require "../../lib/error"
 class Redis
   constructor: ( @app ) ->
     env =  @app.constructor.env
@@ -24,7 +25,7 @@ class Redis
     return @constructor.__super__.create.apply @, [ id, details, cb ]
 
   update: ( id, details, cb ) ->
-    @find id, ( err, dbObj ) ->
+    @find id, ( err, dbObj ) =>
       if not dbObj
         return cb new Error "Failed to update, can't find '#{ id }'."
 
@@ -102,6 +103,15 @@ class Redis
     @hgetall id, ( err, details ) =>
       return cb err, null if err
       return cb null, null unless details and _.size details
+      for key, val of details
+        continue if not val?
+
+        # find out what type we expect
+        suggested_type = @constructor.structure.properties[ key ]?.type
+
+        # convert int if need be
+        if suggested_type and suggested_type is "integer"
+          details[ key ] = parseInt( val )
 
       for key, val of details
         continue if not val?

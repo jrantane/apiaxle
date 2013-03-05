@@ -4,20 +4,14 @@ readline = require "readline"
 
 # command loading
 { Api } = require "./../command/api"
-{ Apis } = require "./../command/apis"
-{ Keys } = require "./../command/keys"
 { Key } = require "./../command/key"
+{ KeyRing } = require "./../command/keyring"
 
 class exports.ReplHelper
   @all_commands =
     api: Api
-    apis: Apis
-    keys: Keys
     key: Key
-
-  @help = """Available commands are: #{ _.keys( @all_commands ).join ', ' }
-             Try the one of the commands with no arguments for more
-             information."""
+    keyring: KeyRing
 
   constructor: ( @app ) ->
 
@@ -28,13 +22,20 @@ class exports.ReplHelper
 
     @rl.on "close", onCloseCb
 
-  runCommands: ( [ commands, keypairs ], cb ) ->
+  runCommands: ( entered_commands, cb ) ->
     # get the initial highlevel command
-    command = commands.shift()
+    command = entered_commands.shift()
 
     # quit/exit are slightly magic
     return if command in [ "quit", "exit" ]
-    return cb null, @constructor.help if command is "help"
+
+    # ugh, help is magic too
+    if command is "help"
+      available_commands = _.keys( @constructor.all_commands ).join ", "
+      help = "Available commands are #{ available_commands }. Try one with "
+      help += "help following it. E.G. 'api help'"
+
+      return cb null, help
 
     if not @constructor.all_commands[ command ]?
       return cb new Error "I don't know about '#{ command }'. Try 'help' instead."
@@ -42,16 +43,21 @@ class exports.ReplHelper
     # init the class
     command_object = new @constructor.all_commands[ command ]( @app )
 
+    # the command exists, is there a method for it though?
+    method = ( entered_commands.shift() or "help" )
+    if not command_object[ method ]?
+      return cb new Error "'#{ command }' doesn't have a '#{ method }' method."
+
     # run the method
-    command_object.exec commands, keypairs, cb
+    command_object[ method ]( entered_commands, cb )
 
   topLevelInput: ( err, info ) =>
-    console.log "Error: #{ err.message }" if err
+    console.error "Error: #{err.message}" if err
     console.log info if info
 
     @rl.question "axle> ", ( entry ) =>
       return @topLevelInput() if /^\s*$/.exec entry
 
-      all = parser entry
+      entered_commands = parser entry
 
-      @runCommands all, @topLevelInput
+      @runCommands entered_commands, @topLevelInput

@@ -1,76 +1,130 @@
 _ = require "underscore"
 
-{ httpHelpers } = require "../lib/mixins/http-helpers"
-{ Module } = require "../lib/module"
+class exports.Command
+  constructor: ( @axle ) ->
 
-class AppResponse
-  constructor: ( @actual_res, @data ) ->
-    @statusCode  = @actual_res.statusCode
-    @headers     = @actual_res.headers
-    @contentType = @headers[ "content-type" ]
+  _mergeObjects: ( objects, required_keys, optional_keys, cb ) ->
+    all = {}
 
-  withJquery: ( callback ) ->
-    jsdom.env @data, ( errs, win ) =>
-      throw new Error errs if errs
+    # converts [ "hello", "there" ] -> { hello: false, there: flase }
+    required_keys_lookup = _.object( required_keys, ( false for item in required_keys ) )
+    optional_keys_lookup = _.object( optional_keys, ( false for item in optional_keys ) )
 
-      jq = require( "jquery" ).create win
+    for object in objects
+      if ( type = typeof( object ) ) isnt "object"
+        return cb new Error "Expecting a keyvalue pair, got '#{ type }' (#{ object })"
 
-      callback jq
+      # copy the fields
+      for k, v of object
+        all[ k ] = v
 
-  parseXml: ( callback ) ->
-    try
-      output = libxml.parseXmlString @data
-    catch err
-      return callback err, null
+        if required_keys_lookup[ k ]?
+          delete required_keys_lookup[ k ]
+          continue
 
-    return callback null, output
+        if optional_keys_lookup[ k ]?
+          delete optional_keys_lookup[ k ]
+          continue
 
-  parseJson: ( callback ) ->
-    try
-      output = JSON.parse @data, "utf8"
-    catch err
-      return callback err, null
+        # if we're here it's an invalid field
+        return cb new Error "I can't handle the field '#{ k }'"
 
-    return callback null, output
+    return cb null, required_keys_lookup, all
 
-class exports.Command extends Module
-  @port = 28902
+class exports.ModelCommand extends exports.Command
+  constructor: ( @app ) ->
+    super app
 
-  # mixin the httpHeler functions (POST, GET, etc...)
-  @include httpHelpers
+  model: ( ) -> @app.model @constructor.modelName
 
-  exec: ( [ id, command, rest... ], keypairs, cb ) ->
-    return cb null, @constructor.help cb if not id or id is ""
-    return @show id, rest, keypairs, cb if not command?
-    return @[ command ] id, rest, keypairs, cb if ( command of @ )
+  modelProps: ( ) ->
+    ( @model().constructor.structure.properties or [] )
 
-    return cb new Error "Invalid syntax. Try 'help'."
-
-  callApi: ( verb, options, cb ) =>
-    default_options =
-      headers:
-        "content-type": "application/json"
-
-    options = _.extend options, default_options
-
-    log = "Calling (#{ verb }) '#{ options.path }'"
-    if options.data
-      log += " with '#{ options.data }' as the body."
-
-    @app.logger.info log
-
-    @[ verb ] options, ( err, res ) =>
-      return cb err if err
-      return @handleApiResults res, cb
-
-  handleApiResults: ( res, cb ) ->
-    res.parseJson ( err, json ) ->
+  _getIdAndObject: ( commands, cb ) ->
+    @_getId commands, ( err, id ) =>
       return cb err if err
 
-      # the api itself threw an error
-      if json.results?.error?
-        return cb new Error json.results.error.message
+      @model().find id, ( err, dbObj ) ->
+        return cb err if err
+        return cb null, dbObj
 
-      return cb null, json
+  _getId: ( commands, cb ) ->
+    id = commands.shift()
 
-  constructor: ( @app, @id ) ->
+    if not id? or typeof( id ) isnt "string"
+      return cb new Error "Expecting an ID (string) as the first argument."
+
+    return cb null, id
+
+  # pass commands straight through
+  _postProcessOptions: ( commands ) -> commands
+
+  list: ( [ from, to, rest... ], cb ) ->
+    @model().range ( from or 0 ), ( to or 1000 ), cb
+
+  find: ( commands, cb ) ->
+    @_getId commands, ( err, id ) =>
+      return cb err if err
+
+      @model().find id, ( err, dbApi ) =>
+        return cb err if err
+        return cb new Error "'#{id}' doesn't exist." if not dbApi
+        return cb null, dbApi.data
+
+  delete: ( commands, cb ) ->
+    @_getId commands, ( err, id ) =>
+      return cb err if err
+
+      keys = _.keys( @modelProps() ).sort()
+      @model().find id, ( err, dbApi ) =>
+        return cb err if err
+        return cb new Error "'#{ id }' doesn't exist." if not dbApi
+
+        @model().delete id, ( err ) ->
+          return cb err if err
+          return cb null, "'#{ id }' deleted."
+
+  update: ( commands, cb ) ->
+    @_getId commands, ( err, id ) =>
+      return cb err if err
+
+      # the fields this model supports
+      keys = _.keys( @modelProps() ).sort()
+
+      @model().find id, ( err, dbApi ) =>
+        return cb err if err
+        return cb new Error "'#{ id }' doesn't exist." if not dbApi
+
+        @_mergeObjects commands, [], keys, ( err, missing, options ) =>
+          return cb err if err
+
+          @model().update id, options, ( err, dbApi ) ->
+            return cb err if err
+            return cb null, dbApi.data
+
+  create: ( commands, cb ) ->
+    @_getId commands, ( err, id ) =>
+      return cb err if err
+
+      # the fields this model supports
+      keys = _.keys( @modelProps() ).sort()
+
+      # these are the required_keys options
+      required_keys = _.filter keys, ( k ) => @modelProps()[ k ].required
+      optional_keys = _.difference keys, required_keys
+
+      @_mergeObjects commands, required_keys, optional_keys, ( err, missing, options ) =>
+        return cb err if err
+
+        missing_string = _.keys( missing ).join ", "
+
+        if missing_string
+          return cb new Error "Missing required values: '#{ missing_string }'"
+
+        # a command might need to modify the commands somehow before
+        # they go to create
+        options = @_postProcessOptions options
+
+        @model().create id, options, ( err, dbApi ) ->
+          return cb err if err
+          return cb null, dbApi.data
