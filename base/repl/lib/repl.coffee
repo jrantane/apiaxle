@@ -52,7 +52,7 @@ class exports.ReplHelper
     command_object[ method ]( entered_commands, cb )
 
   topLevelInput: ( err, info ) =>
-    console.error err.message if err
+    console.error "Error: #{err.message}" if err
     console.log info if info
 
     @rl.question "axle> ", ( entry ) =>
