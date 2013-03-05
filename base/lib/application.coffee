@@ -150,8 +150,6 @@ class exports.Application
 
       @logger.info "Loading configuration from '#{ config_filename }'."
 
-      @logger.info "Loading configuration from '#{ config_filename }'."
-
       # now let the rest of the class know about app
       @app = app
 
