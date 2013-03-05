@@ -24,7 +24,7 @@ class Redis
     return @constructor.__super__.create.apply @, [ id, details, cb ]
 
   update: ( id, details, cb ) ->
-    @find id, ( err, dbObj ) ->
+    @find id, ( err, dbObj ) =>
       if not dbObj
         return cb new Error "Failed to update, can't find '#{ id }'."
 

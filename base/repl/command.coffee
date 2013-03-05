@@ -35,9 +35,7 @@ class exports.ModelCommand extends exports.Command
   constructor: ( @app ) ->
     super app
 
-  model: ( ) ->
-    return @_model if @_model
-    return ( @_model = @app.model( @constructor.modelName ) )
+  model: ( ) -> @app.model @constructor.modelName
 
   modelProps: ( ) ->
     ( @model().constructor.structure.properties or [] )
@@ -99,7 +97,7 @@ class exports.ModelCommand extends exports.Command
         @_mergeObjects commands, [], keys, ( err, missing, options ) =>
           return cb err if err
 
-          @model().create id, options, ( err, dbApi ) ->
+          @model().update id, options, ( err, dbApi ) ->
             return cb err if err
             return cb null, dbApi.data
 
