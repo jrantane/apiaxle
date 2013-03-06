@@ -3,31 +3,30 @@ Tokenizer = require "tokenizer"
 module.exports = ( str ) ->
   all        = []
   assignment = false
-  allpairs   = {}
 
   buildCommandStruct = ( token, type ) ->
     return if type in [ "seperator" ]
 
-
     if type is "digit"
       all.push parseInt( token )
+
+    if type is "assignment"
+      assignment = true
 
     if type in [ "string", "bare" ]
       # strip the starting and ending " from the string
       token = token.replace /(?:^['"]|["']$)/g, "" if type is "string"
 
+      # the previous string/bare was meant to be a key in a hash
+      if assignment
+        last = all.pop()
+        output = {}
+        output[ last ] = token
+        all.push output
+        assignment = false
+        return
+
       all.push token
-
-    # the previous string/bare was meant to be a key in a hash
-    if assignment
-      val = all.pop()
-      key = all.pop()
-      allpairs[ key ] = val
-      assignment = false
-      return
-
-    if type is "assignment"
-      assignment = true
 
   t = new Tokenizer()
   t.on "token", buildCommandStruct
@@ -52,4 +51,4 @@ module.exports = ( str ) ->
   t.addRule /^=$/, "assignment"
 
   t.end str
-  return [ all, allpairs ]
+  return all
