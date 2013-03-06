@@ -8,7 +8,6 @@ fs           = require "fs"
 redis        = require "redis"
 
 { Application } = require "apiaxle-base"
-{ StdoutLogger  } = require "./lib/stderrlogger"
 { NotFoundError } = require "./lib/error"
 
 class exports.ApiaxleApi extends Application
