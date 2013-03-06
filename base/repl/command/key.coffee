@@ -1,24 +1,20 @@
-{ Command } = require "../command"
+_ = require "underscore"
+{ ModelCommand } = require "../command"
 
-class exports.Key extends Command
+class exports.Key extends ModelCommand
   @modelName = "keyFactory"
 
-  delete: ( id, commnads, keypairs, cb ) =>
-    options =
-      path: "/v1/key/#{ id }"
-    @callApi "DELETE", options, cb
+  _postProcessOptions: ( commands ) ->
+    if commands.forApis?
+      commands.forApis = commands.forApis.split /\s*,\s*/
 
-  update: ( id, commnads, keypairs, cb ) =>
-    options =
-      path: "/v1/key/#{ id }"
-      data: JSON.stringify( keypairs )
-    @callApi "PUT", options, cb
+    return commands
 
-  create: ( id, commnads, keypairs, cb ) =>
-    options =
-      path: "/v1/key/#{ id }"
-      data: JSON.stringify( keypairs )
-    @callApi "POST", options, cb
+  help: ( commands, cb ) ->
+    help = "key [find|update|delete] <id>\n\n"
+    help += "To associate with multiple apis: "
+    help += "key create <id> forApis='<api1>,<api2>,<api3>'\n\n"
+    help += "key create <id>\nFields supported:\n"
+    help += @model().getValidationDocs()
 
-  show: ( id, commnads, keypairs, cb ) =>
-    @callApi "GET", path: "/v1/key/#{ id }", cb
+    return cb null, help
