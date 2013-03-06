@@ -8,7 +8,7 @@
   "main": "index",
   "scripts": {
     "test": "cake test",
-    "prepublish": "coffee -bc ."
+    "prepublish": "cake js:build"
   },
   "dependencies": {
     "log4js": "0.5",
