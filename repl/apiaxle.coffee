@@ -5,7 +5,7 @@ util = require "util"
 async = require "async"
 
 { ReplHelper } = require "./lib/repl"
-{ Application } = require "../lib/application"
+{ Application } = require "apiaxle-base"
 
 # create a new application for scripting
 class AxleRepl extends Application
