@@ -7,7 +7,8 @@
   "version": "0.0.4",
   "scripts": {
     "test": "cake test",
-    "prepublish": "cake js:build && cake fixHashbang"
+    "prepublish": "cake js:build && cake fixHashbang",
+    "postpublish": "cake js:clean"
   },
   "bin": {
     "apiaxle-api": "./apiaxle-api.js"

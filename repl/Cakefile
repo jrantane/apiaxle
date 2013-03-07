@@ -8,16 +8,16 @@ util   = require "util"
 
 option "-w", "--watch", "rebuild them when they change"
 task "js:build", "Build the front-end javascript", ( options ) ->
-  jsBuild options, [ "app/**/*.coffee",
+  jsBuild options, [ "command/**/*.coffee",
                      "lib/**/*.coffee",
-                     "apiaxle-api.coffee" ]
+                     "apiaxle.coffee" ]
 
 task "js:clean", "Build the front-end javascript", ( options ) ->
-  jsClean options, [ "app/**/*.js",
+  jsClean options, [ "command/**/*.js",
                      "lib/**/*.js",
-                     "apiaxle-api.js" ]
+                     "apiaxle.js" ]
 
 task "test", "Run the tests.", test
 
 task "fixHashbang", "Fix the hashbangs in the exes", ( options ) ->
-  fixHashbang options, "apiaxle-api.js"
+  fixHashbang options, "apiaxle.js"
