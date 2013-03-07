@@ -19,7 +19,7 @@ jsClean = ( options, globs ) ->
     map:
       "(.+?).js": ( m ) -> fs.unlinkSync "#{m[0]}"
 
-run = ( command, args ) ->
+run = ( command, args=[] ) ->
   script = spawn command, args
 
   script.stdout.on "data", util.print
