@@ -1,6 +1,6 @@
 {
   "author": "Phil Jackson <phil@apiaxle.com>",
-  "name": "apiaxle-api",
+  "name": "apiaxle-repl",
   "keywords": [ "apiaxle", "proxy", "api", "rest", "soap", "repl", "cli" ],
   "description": "ApiAxle's commandline interface.",
   "bugs": "https://github.com/apiaxle/apiaxle/issues",
