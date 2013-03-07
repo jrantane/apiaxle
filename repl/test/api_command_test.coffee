@@ -1,6 +1,5 @@
 async = require "async"
 
-{ ValidationError } = require "../lib/error"
 { FakeAppTest } = require "apiaxle-base"
 { ReplHelper } = require "../lib/repl"
 
